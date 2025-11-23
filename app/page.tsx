@@ -26,7 +26,7 @@ export default function Home() {
           />
 
           <Link
-            href={value.length >= MIN_CHARS ? "/plan" : ""}
+            href={value.length >= MIN_CHARS ? "/intro" : ""}
             className="w-[200px]"
           >
             <Button
