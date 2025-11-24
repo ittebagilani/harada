@@ -12,7 +12,7 @@ export default function Home() {
 
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <section className="bg-[#f5f5f3] h-[90vh] flex items-center justify-center">
         <div className="flex flex-col items-center justify-center gap-10 -mt-30">
           <h1 className="text-black text-8xl font-thin">harada</h1>

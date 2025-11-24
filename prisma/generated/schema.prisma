@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated"
+  // engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String  @id @default(cuid())
+  clerkId     String  @unique
+  email       String  @unique
+  name        String?
+  isFirstUser Boolean @default(true)
+
+  // Relations
+  plans     Plan[]
+  createdAt DateTime @default(now())
+}
+
+model Plan {
+  id        String   @id @default(cuid())
+  userId    String
+  goal      String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user    User     @relation(fields: [userId], references: [id])
+  pillars Pillar[]
+  tasks   Task[]
+}
+
+model Pillar {
+  id     String @id @default(cuid())
+  planId String
+  order  Int
+  title  String
+
+  plan  Plan   @relation(fields: [planId], references: [id])
+  tasks Task[]
+}
+
+model Task {
+  id       String  @id @default(cuid())
+  planId   String
+  pillarId String? // optional in case user edits structure
+  order    Int
+  content  String
+
+  plan   Plan    @relation(fields: [planId], references: [id])
+  pillar Pillar? @relation(fields: [pillarId], references: [id])
+}
