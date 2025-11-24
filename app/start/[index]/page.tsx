@@ -24,7 +24,7 @@ export default function OnboardingQuestion() {
     if (questionIndex < QUESTIONS.length - 1) {
       router.push(`/start/${questionIndex + 1}`);
     } else {
-      router.push("/plan"); // finished onboarding → go to plan screen
+      router.push("/results"); // finished onboarding → go to plan screen
     }
   };
 

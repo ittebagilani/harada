@@ -40,8 +40,8 @@ export default function WelcomeScreen() {
           transition={{ duration: 1, ease: 'easeOut' }}
           className="relative z-10 text-center"
         >
-          <h1 className="text-4xl md:text-5xl font-light tracking-widest text-stone-800 mb-8">
-            Harada Method
+          <h1 className="text-4xl md:text-5xl font-light tracking-tight text-stone-800 mb-8">
+            before we begin
           </h1>
 
           <p className="text-stone-600 text-lg font-light tracking-wide mb-12 leading-relaxed">
