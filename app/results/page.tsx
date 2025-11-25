@@ -1,152 +1,181 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Loader2, Pencil, Check, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import React, { useState } from "react";
 
-export default function ResultsPage() {
-  const [loading, setLoading] = useState(true);
-  const [pillars, setPillars] = useState<string[]>([]);
-  const [grid, setGrid] = useState<string[][]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editValue, setEditValue] = useState("");
+const ResultsPage = () => {
+  const initialGrid = [
+    [
+      { text: "next", color: "bg-red-300" },
+      { text: "next", color: "bg-red-300" },
+      { text: "next", color: "bg-red-300" },
+      { text: "next", color: "bg-blue-400" },
+      { text: "next", color: "bg-blue-400" },
+      { text: "next", color: "bg-blue-400" },
+      { text: "next", color: "bg-lime-300" },
+      { text: "next", color: "bg-lime-300" },
+      { text: "next", color: "bg-lime-300" },
+    ],
+    [
+      { text: "next", color: "bg-red-300" },
+      { text: "No 1", color: "bg-gray-200" },
+      { text: "next", color: "bg-red-300" },
+      { text: "next", color: "bg-blue-400" },
+      { text: "No 2", color: "bg-gray-200" },
+      { text: "next", color: "bg-blue-400" },
+      { text: "next", color: "bg-lime-300" },
+      { text: "No 3", color: "bg-gray-200" },
+      { text: "next", color: "bg-lime-300" },
+    ],
+    [
+      { text: "next", color: "bg-red-300" },
+      { text: "next", color: "bg-red-300" },
+      { text: "next", color: "bg-red-300" },
+      { text: "next", color: "bg-blue-400" },
+      { text: "next", color: "bg-blue-400" },
+      { text: "next", color: "bg-blue-400" },
+      { text: "next", color: "bg-lime-300" },
+      { text: "next", color: "bg-lime-300" },
+      { text: "next", color: "bg-lime-300" },
+    ],
+    [
+      { text: "next", color: "bg-purple-300" },
+      { text: "next", color: "bg-purple-300" },
+      { text: "next", color: "bg-purple-300" },
+      { text: "next", color: "bg-pink-300" },
+      { text: "next", color: "bg-blue-400" },
+      { text: "next", color: "bg-yellow-300" },
+      { text: "next", color: "bg-red-400" },
+      { text: "next", color: "bg-red-400" },
+      { text: "next", color: "bg-red-400" },
+    ],
+    [
+      { text: "next", color: "bg-purple-300" },
+      { text: "No 4", color: "bg-gray-200" },
+      { text: "next", color: "bg-purple-300" },
+      { text: "next", color: "bg-pink-300" },
+      { text: "MAIN", color: "bg-gray-200" },
+      { text: "next", color: "bg-red-400" },
+      { text: "next", color: "bg-red-400" },
+      { text: "No 5", color: "bg-gray-200" },
+      { text: "next", color: "bg-red-400" },
+    ],
+    [
+      { text: "next", color: "bg-purple-300" },
+      { text: "next", color: "bg-purple-300" },
+      { text: "next", color: "bg-purple-300" },
+      { text: "next", color: "bg-teal-400" },
+      { text: "next", color: "bg-orange-400" },
+      { text: "next", color: "bg-orange-300" },
+      { text: "next", color: "bg-red-400" },
+      { text: "next", color: "bg-red-400" },
+      { text: "next", color: "bg-red-400" },
+    ],
+    [
+      { text: "next", color: "bg-teal-300" },
+      { text: "next", color: "bg-teal-300" },
+      { text: "next", color: "bg-teal-300" },
+      { text: "next", color: "bg-yellow-400" },
+      { text: "next", color: "bg-yellow-400" },
+      { text: "next", color: "bg-yellow-400" },
+      { text: "next", color: "bg-orange-300" },
+      { text: "next", color: "bg-orange-300" },
+      { text: "next", color: "bg-orange-300" },
+    ],
+    [
+      { text: "next", color: "bg-teal-300" },
+      { text: "No 6", color: "bg-gray-200" },
+      { text: "next", color: "bg-teal-300" },
+      { text: "next", color: "bg-yellow-400" },
+      { text: "No 7", color: "bg-gray-200" },
+      { text: "next", color: "bg-yellow-400" },
+      { text: "next", color: "bg-orange-300" },
+      { text: "No 8", color: "bg-gray-200" },
+      { text: "next", color: "bg-orange-300" },
+    ],
+    [
+      { text: "next", color: "bg-teal-300" },
+      { text: "next", color: "bg-teal-300" },
+      { text: "next", color: "bg-teal-300" },
+      { text: "next", color: "bg-yellow-400" },
+      { text: "next", color: "bg-yellow-400" },
+      { text: "next", color: "bg-yellow-400" },
+      { text: "next", color: "bg-orange-300" },
+      { text: "next", color: "bg-orange-300" },
+      { text: "next", color: "bg-orange-300" },
+    ],
+  ];
 
-  // Assume goal is saved in localStorage or from DB
-  const goal = typeof window !== "undefined"
-    ? localStorage.getItem("mainGoal") || "Your Goal"
-    : "Your Goal";
+  const [grid, setGrid] = useState(initialGrid);
+  const [editingCell, setEditingCell] = useState(null);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/harada/generate", {
-          method: "POST",
-          body: JSON.stringify({ goal }),
-        });
+  const handleCellClick = (rowIndex, colIndex) => {
+    setEditingCell({ row: rowIndex, col: colIndex });
+  };
 
-        const data = await res.json();
-        setPillars(data.pillars);
-        setGrid(data.grid);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, [goal]);
-
-  function startEdit(i: number, text: string) {
-    setEditingIndex(i);
-    setEditValue(text);
-  }
-
-  function saveEdit(i: number) {
-    const updated = [...pillars];
-    updated[i] = editValue;
-    setPillars(updated);
-    setEditingIndex(null);
-  }
-
-  async function regenerate() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/harada/generate", {
-        method: "POST",
-        body: JSON.stringify({ goal, refine: true, pillars }),
-      });
-      const data = await res.json();
-      setGrid(data.grid);
-    } catch (e) {
-      console.error(e);
-    }
-    setLoading(false);
-  }
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center text-gray-300">
-        <Loader2 className="animate-spin h-8 w-8" />
-      </div>
+  const handleTextChange = (rowIndex, colIndex, newText) => {
+    const newGrid = grid.map((row, rIdx) =>
+      row.map((cell, cIdx) =>
+        rIdx === rowIndex && cIdx === colIndex
+          ? { ...cell, text: newText }
+          : cell
+      )
     );
-  }
+    setGrid(newGrid);
+  };
+
+  const handleBlur = () => {
+    setEditingCell(null);
+  };
 
   return (
-    <div className="px-6 py-10 max-w-4xl mx-auto">
-      {/* Main Goal */}
-      <h1 className="text-3xl font-semibold text-white mb-2">
-        Your Roadmap to: <span className="text-indigo-400">{goal}</span>
-      </h1>
-      <p className="text-gray-400 mb-6">
-        Based on your answers, here are the <span className="font-medium">8 key routines</span> to focus on.
-      </p>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-5xl font-serif text-center mb-12 text-gray-800">
+          your personalized grid
+        </h1>
 
-      {/* Pillars */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        {pillars.map((pillar, i) => (
-          <div
-            key={i}
-            className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-sm flex justify-between items-center"
-          >
-            {editingIndex === i ? (
-              <input
-                className="bg-gray-700 p-2 rounded text-white w-full mr-2"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-              />
-            ) : (
-              <p className="text-gray-200">{pillar}</p>
-            )}
-
-            {editingIndex === i ? (
-              <button
-                onClick={() => saveEdit(i)}
-                className="p-2 bg-green-600 rounded-lg hover:bg-green-700"
-              >
-                <Check className="h-4 w-4" />
-              </button>
-            ) : (
-              <button
-                onClick={() => startEdit(i, pillar)}
-                className="p-2 hover:bg-gray-700 rounded-lg"
-              >
-                <Pencil className="h-4 w-4 text-gray-300" />
-              </button>
-            )}
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="space-y-1">
+            {grid.map((row, rowIndex) => (
+              <div key={rowIndex} className="flex gap-1">
+                {row.map((cell, colIndex) => (
+                  <div
+                    key={colIndex}
+                    className={`${cell.color} flex-1 h-12 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity overflow-hidden`}
+                    onClick={() => handleCellClick(rowIndex, colIndex)}
+                  >
+                    {editingCell?.row === rowIndex &&
+                    editingCell?.col === colIndex ? (
+                      <input
+                        type="text"
+                        value={cell.text}
+                        onChange={(e) =>
+                          handleTextChange(rowIndex, colIndex, e.target.value)
+                        }
+                        onBlur={handleBlur}
+                        autoFocus
+                        className="w-full h-full bg-transparent text-center text-sm font-serif outline-none border-2 border-gray-800 px-1"
+                      />
+                    ) : (
+                      <span className="text-sm font-serif truncate px-1">
+                        {cell.text}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Regenerate */}
-      <button
-        onClick={regenerate}
-        className="mb-8 flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700"
-      >
-        <RefreshCcw className="h-4 w-4" />
-        Regenerate Tasks
-      </button>
-
-      {/* 8×8 Grid */}
-      <h2 className="text-xl font-semibold text-white mb-3">Your 64-Step Action Grid</h2>
-      <div className="grid grid-cols-8 gap-2 bg-gray-900 p-4 rounded-lg border border-gray-700">
-        {grid.flat().map((cell: string, i: number) => (
-          <div
-            key={i}
-            className="text-xs text-gray-300 p-2 bg-gray-800 rounded border border-gray-700 h-20 overflow-y-auto"
-          >
-            {cell}
-          </div>
-        ))}
-      </div>
-
-      {/* Continue button */}
-      <div className="mt-10 flex justify-end">
-        <button
-          onClick={() => (window.location.href = "/dashboard")}
-          className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700"
-        >
-          Continue
-        </button>
+        <Link href={'/dashboard'} className="mt-20 flex">
+          <Button className="mx-auto cursor-pointer rounded-full w-[250px] text-xl" variant={'outline'}>continue</Button>
+        </Link>
       </div>
     </div>
   );
-}
+};
+
+export default ResultsPage;

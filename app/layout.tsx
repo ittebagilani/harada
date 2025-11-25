@@ -1,28 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
+import localFont from "next/font/local"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
+const hina = localFont({
+  src: "../public/fonts/Hina-Mincho-Regular.ttf",
+  variable: "--font-hina",
+  display: "swap"
+})
 export const metadata: Metadata = {
-  title: "HaraDaily",
-  description: "Achieve your goals with this method",
+  title: "grid64",
+  description: "achieve your goals with this method",
 };
 
 export default function RootLayout({
@@ -34,7 +22,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#f5f5f3]`}
+          className={`font-['Hina'] antialiased bg-[#f5f5f3]`}
         >
           
           {children}

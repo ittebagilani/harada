@@ -14,7 +14,7 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
           dashboard
         </h1> */}
 
-        <p className="text-lg mx-auto">Welcome, {userName}</p>
+        <p className="text-8xl mt-20 mx-auto">Welcome, {userName}</p>
         <div className="">
 
         <UserButton />
