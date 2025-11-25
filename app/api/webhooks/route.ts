@@ -1,20 +1,34 @@
-import { verifyWebhook } from '@clerk/nextjs/webhooks'
-import { NextRequest } from 'next/server'
+import { verifyWebhook } from "@clerk/nextjs/webhooks";
+import { sql } from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";
+import { createId } from '@paralleldrive/cuid2'
+
 
 export async function POST(req: NextRequest) {
   try {
-    const evt = await verifyWebhook(req)
+    const evt = await verifyWebhook(req);
 
-    // Do something with payload
-    // For this guide, log payload to console
-    const { id } = evt.data
-    const eventType = evt.type
-    console.log(`Received webhook with ID ${id} and event type of ${eventType}`)
-    console.log('Webhook payload:', evt.data)
+    if (evt.type === "user.created") {
+      const { id, email_addresses, first_name } = evt.data;
 
-    return new Response('Webhook received', { status: 200 })
+      await sql`
+        INSERT INTO "User" (id, "clerkId", email, name, "isFirstUser", "createdAt")
+        VALUES (
+          ${createId()},
+          ${id},
+          ${email_addresses[0].email_address},
+          ${first_name || null},
+          true,
+          NOW()
+        )
+      `;
+
+      console.log("User created:", id);
+    }
+
+    return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('Error verifying webhook:', err)
-    return new Response('Error verifying webhook', { status: 400 })
+    console.error("Webhook error:", err);
+    return NextResponse.json({ error: String(err) }, { status: 400 });
   }
 }
