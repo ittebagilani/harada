@@ -23,5 +23,5 @@ export default async function DashboardPage() {
   // if (dbUser[0].isFirstUser) redirect("/onboarding");
 
   // Otherwise → show dashboard
-  return <DashboardClient userName={user.firstName || "there"} />;
+  return <DashboardClient />;
 }
