@@ -21,18 +21,18 @@ export default function Home() {
             placeholder="i want to be rich"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="w-[400px]"
+            className="w-[400px] text-lg!"
           />
 
           <Link
-            href={value.length >= MIN_CHARS ? "/intro" : ""}
+            href={value.length >= MIN_CHARS ? "/onboarding" : ""}
             className="w-[200px]"
           >
             <Button
               variant="outline"
               size="lg"
               disabled={value.length < MIN_CHARS}
-              className="w-full disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-lg"
             >
               achieve this goal
             </Button>
