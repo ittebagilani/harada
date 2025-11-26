@@ -1,11 +1,22 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useState } from "react";
+
+
+interface Cell {
+  text: string;
+  color: string;
+}
+
+interface EditingCell {
+  row: number;
+  col: number;
+
+}
 
 const ResultsPage = () => {
-  const initialGrid = [
+  const initialGrid: Cell[][] = [
     [
       { text: "next", color: "bg-red-300" },
       { text: "next", color: "bg-red-300" },
@@ -107,14 +118,14 @@ const ResultsPage = () => {
     ],
   ];
 
-  const [grid, setGrid] = useState(initialGrid);
-  const [editingCell, setEditingCell] = useState(null);
+  const [grid, setGrid] = useState<Cell[][]>(initialGrid);
+  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
 
-  const handleCellClick = (rowIndex, colIndex) => {
+  const handleCellClick = (rowIndex: number, colIndex: number) => {
     setEditingCell({ row: rowIndex, col: colIndex });
   };
 
-  const handleTextChange = (rowIndex, colIndex, newText) => {
+  const handleTextChange = (rowIndex: number, colIndex: number, newText: string) => {
     const newGrid = grid.map((row, rIdx) =>
       row.map((cell, cIdx) =>
         rIdx === rowIndex && cIdx === colIndex
