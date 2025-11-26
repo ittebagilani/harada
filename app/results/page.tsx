@@ -170,8 +170,13 @@ const ResultsPage = () => {
           </div>
         </div>
 
-        <Link href={'/dashboard'} className="mt-20 flex">
-          <Button className="mx-auto cursor-pointer rounded-full w-[250px] text-xl" variant={'outline'}>continue</Button>
+        <Link href={"/dashboard"} className="mt-20 flex">
+          <button
+            onClick={() => {}}
+            className="px-8 py-3 rounded-xs bg-stone-900 text-white hover:bg-stone-800 transition-all duration-200 text-base font-light cursor-pointer mx-auto"
+          >
+            continue
+          </button>
         </Link>
       </div>
     </div>

@@ -1,61 +1,71 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "./generated"
-  // engineType = "binary"
 }
 
 datasource db {
   provider = "postgresql"
-
+  // url      = env("DATABASE_URL")
 }
 
 model User {
-  id          String  @id @default(cuid())
-  clerkId     String  @unique
-  email       String  @unique
+  id          String   @id @default(cuid())
+  clerkId     String   @unique
+  email       String   @unique
   name        String?
-  isFirstUser Boolean @default(true)
+  isFirstUser Boolean  @default(true)
+  createdAt   DateTime @default(now())
 
-  // Relations
-  plans     Plan[]
-  createdAt DateTime @default(now())
+  plan    Plan?
+  answers Answer[]
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId Int
+  answer     String
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
 }
 
 model Plan {
   id        String   @id @default(cuid())
-  userId    String
+  userId    String   @unique
   goal      String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Relations
-  user    User     @relation(fields: [userId], references: [id])
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   pillars Pillar[]
-  tasks   Task[]
 }
 
 model Pillar {
-  id     String @id @default(cuid())
-  planId String
-  order  Int
-  title  String
+  id        String   @id @default(cuid())
+  planId    String
+  order     Int
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  plan  Plan   @relation(fields: [planId], references: [id])
+  plan  Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
   tasks Task[]
+
+  @@unique([planId, order])
 }
 
 model Task {
-  id       String  @id @default(cuid())
-  planId   String
-  pillarId String? // optional in case user edits structure
-  order    Int
-  content  String
+  id        String   @id @default(cuid())
+  pillarId  String
+  order     Int
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  plan   Plan    @relation(fields: [planId], references: [id])
-  pillar Pillar? @relation(fields: [pillarId], references: [id])
+  pillar Pillar @relation(fields: [pillarId], references: [id], onDelete: Cascade)
+
+  @@unique([pillarId, order])
 }
