@@ -14,9 +14,10 @@ model User {
   email       String   @unique
   name        String?
   isFirstUser Boolean  @default(true)
+  isPremium   Boolean  @default(false)
   createdAt   DateTime @default(now())
 
-  plan    Plan?
+  plans   Plan[]
   answers Answer[]
 }
 
@@ -24,29 +25,34 @@ model Answer {
   id         String   @id @default(cuid())
   userId     String
   questionId Int
-  answer     String
+  value      Int
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, questionId])
+  @@index([userId])
 }
 
 model Plan {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  goal      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  userId      String
+  goal        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   pillars Pillar[]
+
+  @@index([userId])
+  @@index([userId, isActive])
 }
 
 model Pillar {
   id        String   @id @default(cuid())
   planId    String
-  order     Int
   title     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -54,7 +60,7 @@ model Pillar {
   plan  Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
   tasks Task[]
 
-  @@unique([planId, order])
+  @@index([planId])
 }
 
 model Task {

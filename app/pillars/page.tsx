@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { X, Edit2, GripVertical } from "lucide-react";
+import { Edit2 } from "lucide-react";
 
 const DEFAULT_PILLARS = [
   "Discipline",
@@ -20,7 +20,29 @@ export default function Pillars() {
   const [pillars, setPillars] = useState(DEFAULT_PILLARS);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Load existing pillars on mount
+  useEffect(() => {
+    const loadPillars = async () => {
+      try {
+        const response = await fetch("/api/plan/save-pillars");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.pillars && data.pillars.length > 0) {
+            setPillars(data.pillars);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading pillars:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPillars();
+  }, []);
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
@@ -37,10 +59,36 @@ export default function Pillars() {
     setEditValue("");
   };
 
+  const handleContinue = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch("/api/plan/save-pillars", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pillars }),
+      });
 
-  const handleContinue = () => {
-    router.push("/results");
+      if (response.ok) {
+        router.push("/results");
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to save pillars");
+      }
+    } catch (error) {
+      console.error("Error saving pillars:", error);
+      alert("Failed to save pillars. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <p className="text-stone-600">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-6 py-12">
@@ -61,10 +109,6 @@ export default function Pillars() {
           {pillars.map((pillar, index) => (
             <div
               key={index}
-              //   draggable
-              //   onDragStart={() => handleDragStart(index)}
-              //   onDragOver={() => handleDragOver(index)}
-            //   onDragEnd={handleDragEnd}
               className={`group relative aspect-square bg-white border-2 rounded-lg p-6 flex flex-col items-center justify-center transition-all duration-200`}
             >
               {/* Content */}
@@ -122,18 +166,19 @@ export default function Pillars() {
           <div className="flex gap-4 mx-auto">
             <button
               onClick={() => router.back()}
-              className="px-8 py-3 rounded-sm border border-stone-300 text-stone-900 hover:border-stone-400 hover:bg-stone-100 transition-all duration-200 text-base font-light"
+              disabled={isSaving}
+              className="px-8 py-3 rounded-sm border border-stone-300 text-stone-900 hover:border-stone-400 hover:bg-stone-100 transition-all duration-200 text-base font-light disabled:opacity-50"
             >
               back
             </button>
             <button
               onClick={handleContinue}
-              className="px-8 py-3 rounded-sm bg-stone-900 text-white hover:bg-stone-800 transition-all duration-200 text-base font-light"
+              disabled={isSaving}
+              className="px-8 py-3 rounded-sm bg-stone-900 text-white hover:bg-stone-800 transition-all duration-200 text-base font-light disabled:opacity-50"
             >
-              continue
+              {isSaving ? "saving..." : "continue"}
             </button>
           </div>
-          {/* <p className="text-xs text-stone-400 tracking-widest font-light text-center">Step 2 of 3</p> */}
         </div>
       </div>
     </div>

@@ -2,22 +2,8 @@
 
 import { useRouter } from "next/navigation"
 import { useParams } from "next/navigation"
-import { useState } from "react"
-
-const QUESTIONS = [
-  "I believe I currently have the skills needed to reach this goal.",
-  "I am confident in my long-term discipline.",
-  "I have a supportive environment for achieving my dream.",
-  "I understand the steps required to reach my goal.",
-]
-
-const OPTIONS = [
-  { label: "strongly disagree", value: 1 },
-  { label: "disagree", value: 2 },
-  { label: "neutral", value: 3 },
-  { label: "agree", value: 4 },
-  { label: "strongly agree", value: 5 },
-]
+import { useState, useEffect } from "react"
+import { QUESTIONS, ANSWER_OPTIONS } from "@/lib/questions"
 
 export default function OnboardingQuestion() {
   const router = useRouter()
@@ -26,13 +12,60 @@ export default function OnboardingQuestion() {
   const question = QUESTIONS[questionIndex]
 
   const [value, setValue] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    const loadAnswers = async () => {
+      try {
+        const response = await fetch("/api/onboarding")
+        if (response.ok) {
+          const data = await response.json()
+          const savedAnswer = data.answers[questionIndex]
+          if (savedAnswer) {
+            setValue(Number.parseInt(savedAnswer))
+          }
+        }
+      } catch (error) {
+        console.error("Error loading answers:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadAnswers()
+  }, [questionIndex])
+
+  useEffect(() => {
+    if (value === null || isLoading) return
+
+    const saveAnswer = async () => {
+      setIsSaving(true)
+      try {
+        await fetch("/api/onboarding", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            questionId: questionIndex,
+            answer: value
+          })
+        })
+      } catch (error) {
+        console.error("Error saving answer:", error)
+      } finally {
+        setIsSaving(false)
+      }
+    }
+
+    saveAnswer()
+  }, [value, questionIndex, isLoading])
 
   const goNext = () => {
     if (value === null) return
     if (questionIndex < QUESTIONS.length - 1) {
       router.push(`/start/${questionIndex + 1}`)
     } else {
-      router.push("/results")
+      router.push("/pillars")
     }
   }
 
@@ -42,22 +75,28 @@ export default function OnboardingQuestion() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <section className="w-full min-h-screen flex flex-col items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </section>
+    )
+  }
+
   return (
     <section className="w-full min-h-screen flex flex-col items-center justify-center text-center px-6 py-12">
-       <h1 className="text-4xl md:text-7xl font-light tracking-tight -mt-10 mb-8 max-w-2xl leading-relaxed">grid64</h1>
-      {/* Progress indicator */}
+      <h1 className="text-4xl md:text-7xl font-light tracking-tight -mt-10 mb-8 max-w-2xl leading-relaxed">grid64</h1>
+      
       <p className="text-muted-foreground mb-8 tracking-wide">
         Question {questionIndex + 1} of {QUESTIONS.length}
+        {isSaving && <span className="ml-2 text-xs">saving...</span>}
       </p>
 
-      {/* Question */}
       <h1 className="text-4xl md:text-5xl font-light tracking-tight mb-8 max-w-2xl leading-relaxed">{question}</h1>
-
-      {/* <p className="text-muted-foreground mb-16 text-base">be honest. to yourself.</p> */}
 
       <div className="w-full max-w-2xl mb-12">
         <div className="flex flex-col gap-3">
-          {OPTIONS.map((option) => (
+          {ANSWER_OPTIONS.map((option) => (
             <button
               key={option.value}
               onClick={() => setValue(option.value)}
@@ -77,7 +116,6 @@ export default function OnboardingQuestion() {
         </div>
       </div>
 
-      {/* Buttons */}
       <div className="flex gap-4 md:gap-6">
         <button
           onClick={goBack}
