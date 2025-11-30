@@ -1,12 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 
 export default function Onboarding() {
   const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
   const [isFading, setIsFading] = useState(false);
+  const [isSavingGoal, setIsSavingGoal] = useState(false);
+
+  // Save goal from localStorage to database when user is signed in
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const saveGoalToDb = async () => {
+      if (isSignedIn) {
+        const pendingGoal = localStorage.getItem("pendingGoal");
+        
+        if (pendingGoal) {
+          setIsSavingGoal(true);
+          try {
+            const response = await fetch("/api/goal", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ goal: pendingGoal })
+            });
+
+            if (response.ok) {
+              // Clear from localStorage once saved
+              localStorage.removeItem("pendingGoal");
+              console.log("Goal saved successfully");
+            } else {
+              console.error("Failed to save goal");
+            }
+          } catch (error) {
+            console.error("Error saving goal:", error);
+          } finally {
+            setIsSavingGoal(false);
+          }
+        }
+      }
+    };
+
+    saveGoalToDb();
+  }, [isSignedIn, isLoaded]);
 
   const handleYes = () => {
     setIsFading(true);
@@ -14,6 +53,18 @@ export default function Onboarding() {
       router.push("/start/0");
     }, 800);
   };
+
+  // Show loading state while saving goal
+  if (isSavingGoal) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center px-6 py-12">
+        <div className="text-center space-y-4">
+          <div className="w-8 h-8 border-2 border-stone-900 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-stone-600 font-light">Setting up your goal...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 

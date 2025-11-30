@@ -1,48 +1,67 @@
+// app/pillars/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Edit2 } from "lucide-react";
 
-const DEFAULT_PILLARS = [
-  "Discipline",
-  "Health",
-  "Networking",
-  "Finance",
-  "Relationships",
-  "Career",
-  "Personal Growth",
-  "Spirituality",
-];
-
 export default function Pillars() {
   const router = useRouter();
-  const [pillars, setPillars] = useState(DEFAULT_PILLARS);
+  const [pillars, setPillars] = useState<string[]>([]);
+  const [goal, setGoal] = useState("");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load existing pillars on mount
   useEffect(() => {
-    const loadPillars = async () => {
-      try {
-        const response = await fetch("/api/plan/save-pillars");
-        if (response.ok) {
-          const data = await response.json();
-          if (data.pillars && data.pillars.length > 0) {
-            setPillars(data.pillars);
-          }
-        }
-      } catch (error) {
-        console.error("Error loading pillars:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadPillars();
+    loadOrGeneratePillars();
   }, []);
+
+  const loadOrGeneratePillars = async () => {
+    try {
+      // Load goal
+      const goalResponse = await fetch("/api/goal");
+      if (goalResponse.ok) {
+        const goalData = await goalResponse.json();
+        if (goalData.goal) {
+          setGoal(goalData.goal);
+        }
+      }
+
+      // Check if pillars already exist
+      const pillarsResponse = await fetch("/api/pillars");
+      if (pillarsResponse.ok) {
+        const pillarsData = await pillarsResponse.json();
+        if (pillarsData.pillars && pillarsData.pillars.length > 0) {
+          setPillars(pillarsData.pillars);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // No pillars exist, generate them from answers
+      setIsGenerating(true);
+      const generateResponse = await fetch("/api/generate-pillars", {
+        method: "POST",
+      });
+
+      if (generateResponse.ok) {
+        const data = await generateResponse.json();
+        setPillars(data.pillars);
+      } else {
+        alert("Failed to generate pillars. Please try again.");
+      }
+
+      setIsGenerating(false);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error loading pillars:", error);
+      setIsLoading(false);
+      setIsGenerating(false);
+    }
+  };
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
@@ -62,17 +81,24 @@ export default function Pillars() {
   const handleContinue = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch("/api/plan/save-pillars", {
+      const response = await fetch("/api/pillars", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pillars }),
+        body: JSON.stringify({ 
+          pillars, 
+          goal: goal || "My Goal" 
+        }),
       });
 
       if (response.ok) {
         router.push("/results");
       } else {
         const data = await response.json();
-        alert(data.error || "Failed to save pillars");
+        if (data.requiresUpgrade) {
+          alert(data.error);
+        } else {
+          alert(data.error || "Failed to save pillars");
+        }
       }
     } catch (error) {
       console.error("Error saving pillars:", error);
@@ -82,10 +108,15 @@ export default function Pillars() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isGenerating) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <p className="text-stone-600">Loading...</p>
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-stone-900 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-stone-600 text-lg">
+            {isGenerating ? "Analyzing your responses..." : "Loading..."}
+          </p>
+        </div>
       </div>
     );
   }
@@ -99,8 +130,10 @@ export default function Pillars() {
             your 8 pillars
           </h1>
           <p className="text-base text-stone-600 font-light tracking-wide leading-relaxed max-w-2xl mx-auto">
-            We found your 8 weakest areas. These are your pillars. Edit or
-            reorder to match your life.
+            Working towards: <span className="font-medium">{goal}</span>
+          </p>
+          <p className="text-sm text-stone-500 font-light">
+            Based on your responses, these are your 8 focus areas. Edit them if needed.
           </p>
         </div>
 
@@ -111,7 +144,6 @@ export default function Pillars() {
               key={index}
               className={`group relative aspect-square bg-white border-2 rounded-lg p-6 flex flex-col items-center justify-center transition-all duration-200`}
             >
-              {/* Content */}
               {editingIndex === index ? (
                 <div className="w-full space-y-3">
                   <input
