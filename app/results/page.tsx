@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
+import { toPng } from "html-to-image";
 import { Download } from "lucide-react";
 
 interface Cell {
@@ -17,14 +18,14 @@ interface EditingCell {
 }
 
 const COLORS = [
-  "bg-red-300", // 0
-  "bg-blue-400", // 1
-  "bg-lime-300", // 2
-  "bg-purple-300", // 3
-  "bg-red-400", // 4
-  "bg-teal-300", // 5
-  "bg-yellow-400", // 6
-  "bg-orange-300", // 7
+  "bg-red-300",     // 0
+  "bg-blue-400",    // 1
+  "bg-lime-300",    // 2
+  "bg-purple-300",  // 3
+  "bg-red-400",     // 4
+  "bg-teal-300",    // 5
+  "bg-yellow-400",  // 6
+  "bg-orange-300",  // 7
 ];
 
 const ResultsPage = () => {
@@ -33,23 +34,35 @@ const ResultsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [goal, setGoal] = useState<string | null>(null);
+
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    fetchGoal();
     loadOrGeneratePlan();
   }, []);
+
+  const fetchGoal = async () => {
+  try {
+    const res = await fetch("/api/goal");
+    const data = await res.json();
+
+    if (data.goal) {
+      setGoal(data.goal);
+    }
+  } catch (err) {
+    console.error("Error fetching goal:", err);
+  }
+};
 
   const loadOrGeneratePlan = async () => {
     try {
       const tasksResponse = await fetch("/api/tasks");
       const tasksData = await tasksResponse.json();
 
-      if (
-        tasksData.tasksData &&
-        tasksData.tasksData.length > 0 &&
-        tasksData.tasksData[0].tasks.length > 0
-      ) {
-        const newGrid = createGridFromTasks(tasksData.tasksData);
+      if (tasksData.tasksData && tasksData.tasksData.length > 0 && tasksData.tasksData[0].tasks.length > 0) {
+        const newGrid = createGridFromTasks(tasksData.tasksData, goal);
         setGrid(newGrid);
         setIsLoading(false);
       } else {
@@ -61,7 +74,7 @@ const ResultsPage = () => {
         if (generateResponse.ok) {
           const newTasksResponse = await fetch("/api/tasks");
           const newTasksData = await newTasksResponse.json();
-          const newGrid = createGridFromTasks(newTasksData.tasksData);
+          const newGrid = createGridFromTasks(newTasksData.tasksData, goal);
           setGrid(newGrid);
         } else {
           alert("Failed to generate plan. Please try again.");
@@ -77,10 +90,10 @@ const ResultsPage = () => {
     }
   };
 
-  const createGridFromTasks = (tasksData: any[]) => {
+  const createGridFromTasks = (tasksData: any[], goal: string | null) => {
     // Initialize grid with empty cells
     const grid: Cell[][] = [];
-
+    
     for (let row = 0; row < 9; row++) {
       const gridRow: Cell[] = [];
       for (let col = 0; col < 9; col++) {
@@ -88,113 +101,17 @@ const ResultsPage = () => {
       }
       grid.push(gridRow);
     }
-
+    
     // Map each pillar to its grid position
     const pillarPositions = [
-      {
-        pillarIdx: 0,
-        cells: [
-          [0, 0],
-          [0, 1],
-          [0, 2],
-          [1, 0],
-          [1, 2],
-          [2, 0],
-          [2, 1],
-          [2, 2],
-        ],
-      },
-      {
-        pillarIdx: 1,
-        cells: [
-          [0, 3],
-          [0, 4],
-          [0, 5],
-          [1, 3],
-          [1, 5],
-          [2, 3],
-          [2, 4],
-          [2, 5],
-        ],
-      },
-      {
-        pillarIdx: 2,
-        cells: [
-          [0, 6],
-          [0, 7],
-          [0, 8],
-          [1, 6],
-          [1, 8],
-          [2, 6],
-          [2, 7],
-          [2, 8],
-        ],
-      },
-      {
-        pillarIdx: 3,
-        cells: [
-          [3, 0],
-          [3, 1],
-          [3, 2],
-          [4, 0],
-          [4, 2],
-          [5, 0],
-          [5, 1],
-          [5, 2],
-        ],
-      },
-      {
-        pillarIdx: 4,
-        cells: [
-          [3, 6],
-          [3, 7],
-          [3, 8],
-          [4, 6],
-          [4, 8],
-          [5, 6],
-          [5, 7],
-          [5, 8],
-        ],
-      },
-      {
-        pillarIdx: 5,
-        cells: [
-          [6, 0],
-          [6, 1],
-          [6, 2],
-          [7, 0],
-          [7, 2],
-          [8, 0],
-          [8, 1],
-          [8, 2],
-        ],
-      },
-      {
-        pillarIdx: 6,
-        cells: [
-          [6, 3],
-          [6, 4],
-          [6, 5],
-          [7, 3],
-          [7, 5],
-          [8, 3],
-          [8, 4],
-          [8, 5],
-        ],
-      },
-      {
-        pillarIdx: 7,
-        cells: [
-          [6, 6],
-          [6, 7],
-          [6, 8],
-          [7, 6],
-          [7, 8],
-          [8, 6],
-          [8, 7],
-          [8, 8],
-        ],
-      },
+      { pillarIdx: 0, cells: [[0,0],[0,1],[0,2],[1,0],[1,2],[2,0],[2,1],[2,2]] },
+      { pillarIdx: 1, cells: [[0,3],[0,4],[0,5],[1,3],[1,5],[2,3],[2,4],[2,5]] },
+      { pillarIdx: 2, cells: [[0,6],[0,7],[0,8],[1,6],[1,8],[2,6],[2,7],[2,8]] },
+      { pillarIdx: 3, cells: [[3,0],[3,1],[3,2],[4,0],[4,2],[5,0],[5,1],[5,2]] },
+      { pillarIdx: 4, cells: [[3,6],[3,7],[3,8],[4,6],[4,8],[5,6],[5,7],[5,8]] },
+      { pillarIdx: 5, cells: [[6,0],[6,1],[6,2],[7,0],[7,2],[8,0],[8,1],[8,2]] },
+      { pillarIdx: 6, cells: [[6,3],[6,4],[6,5],[7,3],[7,5],[8,3],[8,4],[8,5]] },
+      { pillarIdx: 7, cells: [[6,6],[6,7],[6,8],[7,6],[7,8],[8,6],[8,7],[8,8]] },
     ];
 
     // Fill in tasks
@@ -205,7 +122,7 @@ const ResultsPage = () => {
       cells.forEach((cell, taskIdx) => {
         const [row, col] = cell;
         const task = pillarData.tasks[taskIdx];
-
+        
         grid[row][col] = {
           text: task ? task.content : "next",
           color: COLORS[pillarIdx],
@@ -216,38 +133,25 @@ const ResultsPage = () => {
     });
 
     // Fill center cell
-    grid[4][4] = { text: "MAIN", color: "bg-gray-200" };
-
+    grid[4][4] = { text: goal || "MAIN GOAL", color: "bg-gray-200" };
+    
     // Fill milestone cells with pillar names
-    if (tasksData[0])
-      grid[1][1] = { text: tasksData[0].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[1])
-      grid[1][4] = { text: tasksData[1].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[2])
-      grid[1][7] = { text: tasksData[2].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[3])
-      grid[4][1] = { text: tasksData[3].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[4])
-      grid[4][7] = { text: tasksData[4].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[5])
-      grid[7][1] = { text: tasksData[5].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[6])
-      grid[7][4] = { text: tasksData[6].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[7])
-      grid[7][7] = { text: tasksData[7].pillarTitle, color: "bg-gray-200" };
+    if (tasksData[0]) grid[1][1] = { text: tasksData[0].pillarTitle, color: "bg-gray-200" };
+    if (tasksData[1]) grid[1][4] = { text: tasksData[1].pillarTitle, color: "bg-gray-200" };
+    if (tasksData[2]) grid[1][7] = { text: tasksData[2].pillarTitle, color: "bg-gray-200" };
+    if (tasksData[3]) grid[4][1] = { text: tasksData[3].pillarTitle, color: "bg-gray-200" };
+    if (tasksData[4]) grid[4][7] = { text: tasksData[4].pillarTitle, color: "bg-gray-200" };
+    if (tasksData[5]) grid[7][1] = { text: tasksData[5].pillarTitle, color: "bg-gray-200" };
+    if (tasksData[6]) grid[7][4] = { text: tasksData[6].pillarTitle, color: "bg-gray-200" };
+    if (tasksData[7]) grid[7][7] = { text: tasksData[7].pillarTitle, color: "bg-gray-200" };
 
     // Fill remaining center cells
     const centerCells = [
-      [3, 3],
-      [3, 4],
-      [3, 5],
-      [4, 3],
-      [4, 5],
-      [5, 3],
-      [5, 4],
-      [5, 5],
+      [3,3], [3,4], [3,5],
+      [4,3], [4,5],
+      [5,3], [5,4], [5,5]
     ];
-
+    
     centerCells.forEach(([row, col]) => {
       if (grid[row][col].text === "next") {
         grid[row][col] = { text: "next", color: "bg-pink-300" };
@@ -257,53 +161,40 @@ const ResultsPage = () => {
     return grid;
   };
 
-  const exportAsPNG = async () => {
-    if (!gridRef.current) return;
 
-    setIsExporting(true);
+const exportAsPNG = async () => {
+  if (!gridRef.current) return;
 
-    try {
-      // Dynamically import html2canvas
-      const html2canvas = (await import("html2canvas")).default;
+  setIsExporting(true);
 
-      const canvas = await html2canvas(gridRef.current, {
-        logging: false,
-        width: gridRef.current.offsetWidth,
-        height: gridRef.current.offsetHeight,
-      } as any); // Use 'as any' to bypass type checking
+  try {
+    const dataUrl = await toPng(gridRef.current, {
+      cacheBust: true,
+      quality: 1,
+      pixelRatio: 2,
+    });
 
-      // Convert to blob and download
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = `grid64-plan-${
-            new Date().toISOString().split("T")[0]
-          }.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-        }
-      });
-    } catch (error) {
-      console.error("Error exporting:", error);
-      alert("Failed to export grid. Please try again.");
-    } finally {
-      setIsExporting(false);
-    }
-  };
+    const link = document.createElement("a");
+    link.download = `grid64-plan-${new Date()
+      .toISOString()
+      .split("T")[0]}.png`;
+    link.href = dataUrl;
+    link.click();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to export PNG");
+  }
+
+  setIsExporting(false);
+};
+
+
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
     setEditingCell({ row: rowIndex, col: colIndex });
   };
 
-  const handleTextChange = (
-    rowIndex: number,
-    colIndex: number,
-    newText: string
-  ) => {
+  const handleTextChange = (rowIndex: number, colIndex: number, newText: string) => {
     const newGrid = grid.map((row, rIdx) =>
       row.map((cell, cIdx) =>
         rIdx === rowIndex && cIdx === colIndex
@@ -324,13 +215,9 @@ const ResultsPage = () => {
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-gray-900 border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-gray-600 text-lg font-light">
-            {isGenerating
-              ? "Generating your personalized plan..."
-              : "Loading..."}
+            {isGenerating ? "Generating your personalized plan..." : "Loading..."}
           </p>
-          <p className="text-gray-500 text-sm">
-            This may take up to 30 seconds
-          </p>
+          <p className="text-gray-500 text-sm">This may take up to 30 seconds</p>
         </div>
       </div>
     );
@@ -343,7 +230,7 @@ const ResultsPage = () => {
           <h1 className="text-4xl md:text-5xl font-serif text-gray-800">
             your personalized grid
           </h1>
-
+          
           <button
             onClick={exportAsPNG}
             disabled={isExporting}
@@ -394,7 +281,7 @@ const ResultsPage = () => {
               Edit Pillars
             </button>
           </Link>
-
+          
           <Link href="/dashboard">
             <button className="px-8 py-3 rounded bg-stone-900 text-white hover:bg-stone-800 transition-all duration-200 text-base font-light">
               Continue to Dashboard
