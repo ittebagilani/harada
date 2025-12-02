@@ -132,35 +132,86 @@ export async function POST(request: NextRequest) {
         DELETE FROM "Pillar" WHERE "planId" = ${planId}
       `
     } else {
-      // Creating a new plan
-      
-      // Check if user is premium or if this is their first plan
-      const existingPlans = await sql`
-        SELECT COUNT(*) as count FROM "Plan" WHERE "userId" = ${userId}
+      // Check if user has an existing active plan without pillars (incomplete onboarding)
+      const existingActivePlan = await sql`
+        SELECT p.* FROM "Plan" p
+        WHERE p."userId" = ${userId} AND p."isActive" = true
+        ORDER BY p."createdAt" DESC
+        LIMIT 1
       `
-      
-      const planCount = parseInt(existingPlans[0].count)
-      
-      if (!isPremium && planCount >= 1) {
-        return NextResponse.json({ 
-          error: "Free users can only have one plan. Upgrade to premium for multiple goals.",
-          requiresUpgrade: true
-        }, { status: 403 })
+
+      if (existingActivePlan.length > 0) {
+        // Check if this plan has pillars
+        const existingPillars = await sql`
+          SELECT COUNT(*) as count FROM "Pillar" WHERE "planId" = ${existingActivePlan[0].id}
+        `
+
+        const pillarCount = parseInt(existingPillars[0].count)
+
+        if (pillarCount === 0) {
+          // Plan exists but has no pillars - this is an incomplete onboarding, reuse it
+          activePlanId = existingActivePlan[0].id
+          
+          // Update goal if provided
+          if (goal) {
+            await sql`
+              UPDATE "Plan" 
+              SET "goal" = ${goal}, "updatedAt" = ${now.toISOString()}
+              WHERE "id" = ${activePlanId}
+            `
+          }
+        } else {
+          // Plan exists with pillars - check if user can create another plan
+          const allPlans = await sql`
+            SELECT COUNT(*) as count FROM "Plan" WHERE "userId" = ${userId}
+          `
+          
+          const totalPlanCount = parseInt(allPlans[0].count)
+          
+          if (!isPremium && totalPlanCount >= 1) {
+            return NextResponse.json({ 
+              error: "Free users can only have one plan. Upgrade to premium for multiple goals.",
+              requiresUpgrade: true
+            }, { status: 403 })
+          }
+
+          // Deactivate all other plans and create new one
+          await sql`
+            UPDATE "Plan" SET "isActive" = false WHERE "userId" = ${userId}
+          `
+
+          const newPlanId = createId()
+          const plan = await sql`
+            INSERT INTO "Plan" ("id", "userId", "goal", "isActive", "createdAt", "updatedAt")
+            VALUES (${newPlanId}, ${userId}, ${goal || "TBD"}, ${true}, ${now.toISOString()}, ${now.toISOString()})
+            RETURNING *
+          `
+          activePlanId = plan[0].id
+        }
+      } else {
+        // No active plan exists, check total plan count
+        const allPlans = await sql`
+          SELECT COUNT(*) as count FROM "Plan" WHERE "userId" = ${userId}
+        `
+        
+        const totalPlanCount = parseInt(allPlans[0].count)
+        
+        if (!isPremium && totalPlanCount >= 1) {
+          return NextResponse.json({ 
+            error: "Free users can only have one plan. Upgrade to premium for multiple goals.",
+            requiresUpgrade: true
+          }, { status: 403 })
+        }
+
+        // Create new plan
+        const newPlanId = createId()
+        const plan = await sql`
+          INSERT INTO "Plan" ("id", "userId", "goal", "isActive", "createdAt", "updatedAt")
+          VALUES (${newPlanId}, ${userId}, ${goal || "TBD"}, ${true}, ${now.toISOString()}, ${now.toISOString()})
+          RETURNING *
+        `
+        activePlanId = plan[0].id
       }
-
-      // Deactivate all other plans if creating a new one
-      await sql`
-        UPDATE "Plan" SET "isActive" = false WHERE "userId" = ${userId}
-      `
-
-      // Create new plan
-      const newPlanId = createId()
-      const plan = await sql`
-        INSERT INTO "Plan" ("id", "userId", "goal", "isActive", "createdAt", "updatedAt")
-        VALUES (${newPlanId}, ${userId}, ${goal || "TBD"}, ${true}, ${now.toISOString()}, ${now.toISOString()})
-        RETURNING *
-      `
-      activePlanId = plan[0].id
     }
 
     // Insert new pillars

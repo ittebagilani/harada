@@ -17,10 +17,10 @@ export default async function DashboardPage() {
   `;
 
   // If user not found, force onboarding
-  // if (!dbUser[0]) redirect("/onboarding");
+  if (!dbUser[0]) redirect("/onboarding");
 
   // If first-time → go to onboarding
-  // if (dbUser[0].isFirstUser) redirect("/onboarding");
+  if (dbUser[0].isFirstUser) redirect("/onboarding");
 
   // Otherwise → show dashboard
   return <DashboardClient />;

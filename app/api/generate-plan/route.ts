@@ -69,12 +69,12 @@ export async function POST(request: NextRequest) {
     const formattedAnswers = formatAnswersForAI(answers as Answer[])
     const pillarsList = pillars.map((p: any) => p.title).join(", ")
 
-    // Call Claude API with API key from environment
+    // Call Claude API
     const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY!, // Add API key here
+        "x-api-key": process.env.ANTHROPIC_API_KEY!,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
@@ -162,6 +162,13 @@ Use the EXACT pillar names provided.`
       }
     }
 
+    // Mark user as no longer first-time user (onboarding complete)
+    await sql`
+      UPDATE "User" 
+      SET "isFirstUser" = false 
+      WHERE "id" = ${userId}
+    `
+
     return NextResponse.json({
       success: true,
       tasksCount: savedTasks.length,
@@ -197,7 +204,7 @@ function formatAnswersForAI(answers: Answer[]): string {
     .map(({ questionId, value }) => {
       const question = QUESTIONS[questionId] || `Question ${questionId + 1}`
       const answer = ANSWER_LABELS[value] || value.toString()
-      return `- ${question}: ${answer}`
+      return `- ${question}: ${answer} (${value}/5)`
     })
     .join("\n")
 }

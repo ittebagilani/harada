@@ -10,6 +10,8 @@ interface Cell {
   color: string;
   taskId?: string;
   pillarId?: string;
+  isCenter?: boolean;
+  isPillar?: boolean;
 }
 
 interface EditingCell {
@@ -18,23 +20,23 @@ interface EditingCell {
 }
 
 const COLORS = [
-  "bg-red-300",     // 0
-  "bg-blue-400",    // 1
-  "bg-lime-300",    // 2
-  "bg-purple-300",  // 3
-  "bg-red-400",     // 4
-  "bg-teal-300",    // 5
-  "bg-yellow-400",  // 6
-  "bg-orange-300",  // 7
+  "bg-stone-50",     // 0
+  "bg-stone-50",     // 1
+  "bg-stone-50",     // 2
+  "bg-stone-50",     // 3
+  "bg-stone-50",     // 4
+  "bg-stone-50",     // 5
+  "bg-stone-50",     // 6
+  "bg-stone-50",     // 7
 ];
 
 const ResultsPage = () => {
   const [grid, setGrid] = useState<Cell[][]>([]);
-  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [goal, setGoal] = useState<string | null>(null);
+  const [hoveredCell, setHoveredCell] = useState<{row: number, col: number} | null>(null);
 
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -44,17 +46,17 @@ const ResultsPage = () => {
   }, []);
 
   const fetchGoal = async () => {
-  try {
-    const res = await fetch("/api/goal");
-    const data = await res.json();
+    try {
+      const res = await fetch("/api/goal");
+      const data = await res.json();
 
-    if (data.goal) {
-      setGoal(data.goal);
+      if (data.goal) {
+        setGoal(data.goal);
+      }
+    } catch (err) {
+      console.error("Error fetching goal:", err);
     }
-  } catch (err) {
-    console.error("Error fetching goal:", err);
-  }
-};
+  };
 
   const loadOrGeneratePlan = async () => {
     try {
@@ -91,18 +93,16 @@ const ResultsPage = () => {
   };
 
   const createGridFromTasks = (tasksData: any[], goal: string | null) => {
-    // Initialize grid with empty cells
     const grid: Cell[][] = [];
     
     for (let row = 0; row < 9; row++) {
       const gridRow: Cell[] = [];
       for (let col = 0; col < 9; col++) {
-        gridRow.push({ text: "next", color: "bg-gray-200" });
+        gridRow.push({ text: "", color: "bg-white" });
       }
       grid.push(gridRow);
     }
     
-    // Map each pillar to its grid position
     const pillarPositions = [
       { pillarIdx: 0, cells: [[0,0],[0,1],[0,2],[1,0],[1,2],[2,0],[2,1],[2,2]] },
       { pillarIdx: 1, cells: [[0,3],[0,4],[0,5],[1,3],[1,5],[2,3],[2,4],[2,5]] },
@@ -114,7 +114,6 @@ const ResultsPage = () => {
       { pillarIdx: 7, cells: [[6,6],[6,7],[6,8],[7,6],[7,8],[8,6],[8,7],[8,8]] },
     ];
 
-    // Fill in tasks
     pillarPositions.forEach(({ pillarIdx, cells }) => {
       const pillarData = tasksData[pillarIdx];
       if (!pillarData) return;
@@ -124,7 +123,7 @@ const ResultsPage = () => {
         const task = pillarData.tasks[taskIdx];
         
         grid[row][col] = {
-          text: task ? task.content : "next",
+          text: task ? task.content : "",
           color: COLORS[pillarIdx],
           taskId: task?.id,
           pillarId: pillarData.pillarId,
@@ -132,163 +131,211 @@ const ResultsPage = () => {
       });
     });
 
-    // Fill center cell
-    grid[4][4] = { text: goal || "MAIN GOAL", color: "bg-gray-200" };
+    // Center cell with goal
+    grid[4][4] = { 
+      text: goal || "MAIN GOAL", 
+      color: "bg-stone-900",
+      isCenter: true 
+    };
     
-    // Fill milestone cells with pillar names
-    if (tasksData[0]) grid[1][1] = { text: tasksData[0].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[1]) grid[1][4] = { text: tasksData[1].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[2]) grid[1][7] = { text: tasksData[2].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[3]) grid[4][1] = { text: tasksData[3].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[4]) grid[4][7] = { text: tasksData[4].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[5]) grid[7][1] = { text: tasksData[5].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[6]) grid[7][4] = { text: tasksData[6].pillarTitle, color: "bg-gray-200" };
-    if (tasksData[7]) grid[7][7] = { text: tasksData[7].pillarTitle, color: "bg-gray-200" };
+    // Pillar name cells - positioned adjacent to center (4,4)
+    // Top row
+    if (tasksData[0]) grid[3][3] = { text: tasksData[0].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[1]) grid[3][4] = { text: tasksData[1].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[2]) grid[3][5] = { text: tasksData[2].pillarTitle, color: "bg-stone-200", isPillar: true };
+    // Middle row
+    if (tasksData[3]) grid[4][3] = { text: tasksData[3].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[4]) grid[4][5] = { text: tasksData[4].pillarTitle, color: "bg-stone-200", isPillar: true };
+    // Bottom row
+    if (tasksData[5]) grid[5][3] = { text: tasksData[5].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[6]) grid[5][4] = { text: tasksData[6].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[7]) grid[5][5] = { text: tasksData[7].pillarTitle, color: "bg-stone-200", isPillar: true };
+    
+    // Also add pillar names to the original milestone positions
+    if (tasksData[0]) grid[1][1] = { text: tasksData[0].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[1]) grid[1][4] = { text: tasksData[1].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[2]) grid[1][7] = { text: tasksData[2].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[3]) grid[4][1] = { text: tasksData[3].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[4]) grid[4][7] = { text: tasksData[4].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[5]) grid[7][1] = { text: tasksData[5].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[6]) grid[7][4] = { text: tasksData[6].pillarTitle, color: "bg-stone-200", isPillar: true };
+    if (tasksData[7]) grid[7][7] = { text: tasksData[7].pillarTitle, color: "bg-stone-200", isPillar: true };
 
-    // Fill remaining center cells
-    const centerCells = [
-      [3,3], [3,4], [3,5],
-      [4,3], [4,5],
-      [5,3], [5,4], [5,5]
-    ];
-    
-    centerCells.forEach(([row, col]) => {
-      if (grid[row][col].text === "next") {
-        grid[row][col] = { text: "next", color: "bg-pink-300" };
-      }
-    });
+
 
     return grid;
   };
 
+  const exportAsPNG = async () => {
+    if (!gridRef.current) return;
 
-const exportAsPNG = async () => {
-  if (!gridRef.current) return;
+    setIsExporting(true);
 
-  setIsExporting(true);
+    try {
+      const dataUrl = await toPng(gridRef.current, {
+        cacheBust: true,
+        quality: 1,
+        pixelRatio: 2,
+      });
 
-  try {
-    const dataUrl = await toPng(gridRef.current, {
-      cacheBust: true,
-      quality: 1,
-      pixelRatio: 2,
-    });
+      const link = document.createElement("a");
+      link.download = `grid64-plan-${new Date()
+        .toISOString()
+        .split("T")[0]}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to export PNG");
+    }
 
-    const link = document.createElement("a");
-    link.download = `grid64-plan-${new Date()
-      .toISOString()
-      .split("T")[0]}.png`;
-    link.href = dataUrl;
-    link.click();
-  } catch (error) {
-    console.error(error);
-    alert("Failed to export PNG");
-  }
-
-  setIsExporting(false);
-};
-
-
-
-  const handleCellClick = (rowIndex: number, colIndex: number) => {
-    setEditingCell({ row: rowIndex, col: colIndex });
-  };
-
-  const handleTextChange = (rowIndex: number, colIndex: number, newText: string) => {
-    const newGrid = grid.map((row, rIdx) =>
-      row.map((cell, cIdx) =>
-        rIdx === rowIndex && cIdx === colIndex
-          ? { ...cell, text: newText }
-          : cell
-      )
-    );
-    setGrid(newGrid);
-  };
-
-  const handleBlur = () => {
-    setEditingCell(null);
+    setIsExporting(false);
   };
 
   if (isLoading || isGenerating) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-gray-900 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-gray-600 text-lg font-light">
-            {isGenerating ? "Generating your personalized plan..." : "Loading..."}
-          </p>
-          <p className="text-gray-500 text-sm">This may take up to 30 seconds</p>
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-center space-y-6">
+          <div className="relative w-16 h-16 mx-auto">
+            <div className="absolute inset-0 border-2 border-stone-300 rounded-full animate-ping opacity-20" />
+            <div className="absolute inset-0 border-2 border-stone-900 border-t-transparent rounded-full animate-spin" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-stone-800 text-lg tracking-wide">
+              {isGenerating ? "生成中" : "読み込み中"}
+            </p>
+            <p className="text-stone-500 text-sm font-light">
+              {isGenerating ? "Crafting your personalized plan" : "Loading"}
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-[1600px] mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl md:text-5xl font-serif text-gray-800">
-            your personalized grid
-          </h1>
+    <div className="min-h-screen bg-stone-50 py-12 px-4">
+      <div className="max-w-[1400px] mx-auto">
+        <div className="flex items-center justify-between mb-12 animate-fadeIn">
+          <div>
+            <h1 className="text-5xl md:text-6xl font-light text-stone-900 tracking-tight mb-2">
+              計画
+            </h1>
+            <p className="text-stone-500 text-sm tracking-widest uppercase">Your Personalized Grid</p>
+          </div>
           
           <button
             onClick={exportAsPNG}
             disabled={isExporting}
-            className="flex items-center gap-2 px-6 py-3 bg-stone-900 text-white rounded hover:bg-stone-800 transition-all duration-200 font-light disabled:opacity-50"
+            className="group flex items-center gap-3 px-6 py-3 bg-stone-900 text-white hover:bg-stone-800 transition-all duration-300 disabled:opacity-50 border border-stone-900"
           >
-            <Download className="w-5 h-5" />
-            {isExporting ? "Exporting..." : "Export as PNG"}
+            <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform duration-300" />
+            <span className="text-sm tracking-wide">{isExporting ? "Exporting..." : "Export"}</span>
           </button>
         </div>
 
-        <div ref={gridRef} className="bg-white p-8 rounded-lg shadow-sm">
+        <div 
+          ref={gridRef} 
+          className="bg-white p-8 border border-stone-200 animate-slideUp"
+          style={{ animationDelay: '100ms' }}
+        >
           <div className="space-y-2">
             {grid.map((row, rowIndex) => (
               <div key={rowIndex} className="flex gap-2">
-                {row.map((cell, colIndex) => (
-                  <div
-                    key={colIndex}
-                    className={`${cell.color} flex-1 min-h-[80px] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity overflow-hidden rounded`}
-                    onClick={() => handleCellClick(rowIndex, colIndex)}
-                  >
-                    {editingCell?.row === rowIndex &&
-                    editingCell?.col === colIndex ? (
-                      <input
-                        type="text"
-                        value={cell.text}
-                        onChange={(e) =>
-                          handleTextChange(rowIndex, colIndex, e.target.value)
-                        }
-                        onBlur={handleBlur}
-                        autoFocus
-                        className="w-full h-full bg-transparent text-center text-sm font-serif outline-none border-2 border-gray-800 px-2"
-                      />
-                    ) : (
-                      <span className="text-sm font-serif text-center px-2 py-2 leading-tight">
+                {row.map((cell, colIndex) => {
+                  const isHovered = hoveredCell?.row === rowIndex && hoveredCell?.col === colIndex;
+                  
+                  return (
+                    <div
+                      key={colIndex}
+                      className={`
+                        ${cell.color} 
+                        flex-1 min-h-[120px] flex items-center justify-center 
+                        transition-all duration-300 ease-out
+                        ${cell.isCenter ? 'shadow-lg' : 'shadow-sm'}
+                        ${isHovered && !cell.isCenter ? 'scale-[1.02] shadow-md' : ''}
+                        ${cell.isPillar ? '' : ''}
+                        overflow-hidden
+                        group
+                      `}
+                      onMouseEnter={() => setHoveredCell({ row: rowIndex, col: colIndex })}
+                      onMouseLeave={() => setHoveredCell(null)}
+                      style={{
+                        animationDelay: `${(rowIndex + colIndex) * 20}ms`
+                      }}
+                    >
+                      <span 
+                        className={`
+                          text-center px-3 py-2 leading-snug
+                          transition-all duration-300
+                          ${cell.isCenter 
+                            ? 'text-white text-xl font-light tracking-wider' 
+                            : cell.isPillar 
+                              ? 'text-stone-800 text-sm font-semibold tracking-widest uppercase'
+                              : 'text-stone-600 text-xs font-light leading-relaxed'
+                          }
+                          ${isHovered && !cell.isCenter ? 'scale-105' : ''}
+                        `}
+                      >
                         {cell.text}
                       </span>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mt-12 flex justify-center gap-4">
+        <div 
+          className="mt-12 flex justify-center gap-6 animate-fadeIn"
+          style={{ animationDelay: '400ms' }}
+        >
           <Link href="/pillars">
-            <button className="px-8 py-3 rounded border border-stone-300 text-stone-900 hover:border-stone-400 hover:bg-stone-100 transition-all duration-200 text-base font-light">
-              Edit Pillars
+            <button className="group px-10 py-4 bg-white border border-stone-300 text-stone-900 hover:border-stone-900 hover:bg-stone-50 transition-all duration-300 text-sm tracking-wide">
+              <span className="group-hover:tracking-wider transition-all duration-300">Edit Pillars</span>
             </button>
           </Link>
           
           <Link href="/dashboard">
-            <button className="px-8 py-3 rounded bg-stone-900 text-white hover:bg-stone-800 transition-all duration-200 text-base font-light">
-              Continue to Dashboard
+            <button className="group px-10 py-4 bg-stone-900 text-white hover:bg-stone-800 transition-all duration-300 text-sm tracking-wide">
+              <span className="group-hover:tracking-wider transition-all duration-300">Continue</span>
             </button>
           </Link>
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.8s ease-out forwards;
+          opacity: 0;
+        }
+
+        .animate-slideUp {
+          animation: slideUp 0.8s ease-out forwards;
+          opacity: 0;
+        }
+      `}</style>
     </div>
   );
 };
