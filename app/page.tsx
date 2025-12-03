@@ -5,11 +5,15 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { GridBackground } from "@/components/grid-bg";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
 export default function Home() {
   const [value, setValue] = useState("");
   const MIN_CHARS = 3;
   const router = useRouter();
+
+  const { user } = useUser();
+
 
   const handleClick = () => {
     if (value.length >= MIN_CHARS) {
@@ -48,6 +52,8 @@ export default function Home() {
     placeholder:text-neutral-500 text-black font-semio px-1 py-2
   "
         />
+
+        {/* {user ? <UserButton /> : <div className="bg-slate-950 w-[150px] text-white flex mx-auto text-center text-lg cursor-pointer"><SignInButton /></div> } */}
 
         <Button
           onClick={handleClick}

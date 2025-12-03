@@ -1,18 +1,22 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import localFont from "next/font/local"
-import { Cormorant_Garamond} from "next/font/google"
+import { Cormorant_Garamond } from "next/font/google";
 
-const hina = localFont({
-  src: "../public/fonts/Hina-Mincho-Regular.ttf",
-  variable: "--font-hina",
-  display: "swap"
+
+import { Inter } from "next/font/google";
+
+const inter = Inter({
+  weight: ["100", "200", "300", "400", "500", "600", "700"],
+  subsets: ["latin"], 
+  variable: "--font-inter"
+
 })
 
 const garamond = Cormorant_Garamond({
   weight: ["300", "400", "500", "600", "700"],
-  subsets: ["latin"]
+  subsets: ["latin"],
+  variable: "--font-garamond"
 })
 
 export const metadata: Metadata = {
@@ -29,7 +33,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${garamond.className} antialiased bg-[#f5f5f3]`}
+          className={` antialiased bg-[#f5f5f3]`}
         >
           
           {children}

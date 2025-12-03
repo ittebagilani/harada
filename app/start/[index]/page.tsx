@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { QUESTIONS, ANSWER_OPTIONS } from "@/lib/questions";
 
+
 export default function OnboardingQuestion() {
   const router = useRouter();
   const { index } = useParams() as { index: string };
@@ -84,7 +85,7 @@ export default function OnboardingQuestion() {
   }
 
   return (
-    <section className="w-full min-h-screen flex flex-col items-center justify-center text-center px-6 py-12">
+    <section className="w-full min-h-screen flex flex-col items-center justify-center text-center px-6 py-12 font-inter">
       <h1 className="text-4xl md:text-3xl -mt-10 mb-8 max-w-2xl">grid64</h1>
 
       <h1 className="text-4xl md:text-5xl font-light tracking-tight max-w-6xl leading-relaxed">
@@ -103,7 +104,7 @@ export default function OnboardingQuestion() {
               onClick={() => setValue(option.value)}
               className={`
                 w-full py-4 px-6 rounded-sm border transition-all duration-200
-                text-md font-light tracking-wide
+                text-md font-light tracking-wide cursor-pointer
                 ${
                   value === option.value
                     ? "border-foreground bg-primary text-primary-foreground"
@@ -121,7 +122,7 @@ export default function OnboardingQuestion() {
         <button
           onClick={goBack}
           disabled={questionIndex === 0}
-          className="px-8 py-2 rounded-sm border border-border text-foreground hover:border-foreground/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-lg font-light"
+          className="cursor-pointer px-8 py-2 rounded-xs border border-border text-foreground hover:border-foreground/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-lg font-light"
         >
           back
         </button>
@@ -129,7 +130,7 @@ export default function OnboardingQuestion() {
         <button
           onClick={goNext}
           disabled={value === null}
-          className="px-8 py-2 rounded-sm bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-lg font-light"
+          className="cursor-pointer px-8 py-2 rounded-xs bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-lg font-light"
         >
           next
         </button>

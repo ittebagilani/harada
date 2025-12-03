@@ -1,168 +1,289 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { UserButton } from "@clerk/nextjs"
-import { Check, BarChart3 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Check, Flame } from "lucide-react"
 
-interface Habit {
+interface Task {
   id: string
-  name: string
+  content: string
+  pillarTitle: string
   completed: boolean
 }
 
-const SAMPLE_HABITS: Habit[] = [
-  { id: "1", name: "Morning meditation", completed: true },
-  { id: "2", name: "Exercise for 30 minutes", completed: true },
-  { id: "3", name: "Read for 20 minutes", completed: false },
-  { id: "4", name: "Journal reflection", completed: true },
-  { id: "5", name: "Healthy meal prep", completed: false },
-  { id: "6", name: "Evening wind down", completed: false },
-]
-
-const WEEKLY_DATA = [
-  { day: "Mon", completed: 5 },
-  { day: "Tue", completed: 6 },
-  { day: "Wed", completed: 4 },
-  { day: "Thu", completed: 5 },
-  { day: "Fri", completed: 6 },
-  { day: "Sat", completed: 3 },
-  { day: "Sun", completed: 5 },
-]
+interface CompletionData {
+  date: string
+  completed: number
+  total: number
+}
 
 export default function DashboardClient() {
-  const [habits, setHabits] = useState<Habit[]>(SAMPLE_HABITS)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [weeklyData, setWeeklyData] = useState<CompletionData[]>([])
+  const [streak, setStreak] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const toggleHabit = (id: string) => {
-    setHabits(habits.map((h) => (h.id === id ? { ...h, completed: !h.completed } : h)))
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      // Fetch today's tasks
+      const tasksResponse = await fetch("/api/daily-tasks")
+      const tasksData = await tasksResponse.json()
+      
+      if (tasksData.tasks) {
+        setTasks(tasksData.tasks)
+      }
+
+      // Fetch weekly completion data
+      const weeklyResponse = await fetch("/api/weekly-completions")
+      const weeklyData = await weeklyResponse.json()
+      
+      if (weeklyData.completions) {
+        setWeeklyData(weeklyData.completions)
+      }
+
+      // Fetch streak
+      const streakResponse = await fetch("/api/streak")
+      const streakData = await streakResponse.json()
+      
+      if (streakData.streak !== undefined) {
+        setStreak(streakData.streak)
+      }
+
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Error loading dashboard data:", error)
+      setIsLoading(false)
+    }
   }
 
-  const completedCount = habits.filter((h) => h.completed).length
-  const completionPercentage = Math.round((completedCount / habits.length) * 100)
-  const maxCompleted = Math.max(...WEEKLY_DATA.map((d) => d.completed))
+  const toggleTask = async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId)
+    if (!task) return
+
+    try {
+      const response = await fetch("/api/toggle-task", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          taskId, 
+          completed: !task.completed 
+        })
+      })
+
+      if (response.ok) {
+        setTasks(tasks.map((t) => 
+          t.id === taskId ? { ...t, completed: !t.completed } : t
+        ))
+        
+        // Refresh streak after completion
+        const streakResponse = await fetch("/api/streak")
+        const streakData = await streakResponse.json()
+        if (streakData.streak !== undefined) {
+          setStreak(streakData.streak)
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling task:", error)
+    }
+  }
+
+  const completedCount = tasks.filter((t) => t.completed).length
+  const completionPercentage = tasks.length > 0 
+    ? Math.round((completedCount / tasks.length) * 100) 
+    : 0
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
-    year: "numeric",
     month: "long",
     day: "numeric",
   })
 
+  const maxCompleted = weeklyData.length > 0 
+    ? Math.max(...weeklyData.map((d) => d.completed)) 
+    : 1
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-center space-y-6">
+          <div className="relative w-16 h-16 mx-auto">
+            <div className="absolute inset-0 border-2 border-stone-300 rounded-full animate-ping opacity-20" />
+            <div className="absolute inset-0 border-2 border-stone-900 border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-stone-800 text-lg tracking-wide">読み込み中</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-stone-50">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-6 md:px-8 md:py-8 border-b border-border">
-        <div className="flex flex-col mx-auto">
-          <h1 className="text-4xl font-light tracking-tight text-foreground text-center">Welcome back</h1>
-          <p className="text-base text-muted-foreground mt-1">Stay consistent. Progress compounds.</p>
+      <header className="flex items-center justify-between px-8 py-8 border-b border-stone-200 bg-white">
+        <div className="flex-1">
+          <h1 className="text-5xl font-light tracking-tight text-stone-900">今日</h1>
+          <p className="text-stone-500 text-sm tracking-wide mt-1 uppercase">{today}</p>
         </div>
         <UserButton />
       </header>
 
-      <div className="max-w-4xl mx-auto px-6 md:px-8 py-8 md:py-12 space-y-12">
-        {/* Daily Checklist */}
-        <section className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-light tracking-tight text-foreground">Today's Habits</h2>
-            <p className="text-base text-muted-foreground mt-1">{today}</p>
+      <div className="max-w-4xl mx-auto px-8 py-12 space-y-16">
+        {/* Streak Display */}
+        <section className="flex items-center justify-center gap-4 py-8 animate-fadeIn">
+          <Flame className={`w-10 h-10 transition-colors duration-300 ${
+            streak > 0 ? 'text-orange-500' : 'text-stone-300'
+          }`} />
+          <div className="text-center">
+            <div className="text-5xl font-light text-stone-900 tracking-tight">{streak}</div>
+            <div className="text-sm text-stone-500 tracking-widest uppercase mt-1">Day Streak</div>
+          </div>
+        </section>
+
+        {/* Daily Tasks */}
+        <section className="space-y-8 animate-slideUp" style={{ animationDelay: '100ms' }}>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-light tracking-tight text-stone-900">Daily Practice</h2>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-stone-500 tracking-wide">
+                {completedCount} of {tasks.length} complete
+              </span>
+              <span className="text-stone-900 font-medium">{completionPercentage}%</span>
+            </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-base text-muted-foreground">Progress</span>
-              <span className="text-base font-medium text-foreground">
-                {completedCount}/{habits.length}
-              </span>
-            </div>
-            <div className="w-full h-1 bg-border rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary transition-all duration-300"
-                style={{ width: `${completionPercentage}%` }}
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">{completionPercentage}% complete</p>
+          <div className="w-full h-1 bg-stone-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-stone-900 transition-all duration-500 ease-out"
+              style={{ width: `${completionPercentage}%` }}
+            />
           </div>
 
-          {/* Habit List */}
-          <div className="space-y-2">
-            {habits.map((habit) => (
+          {/* Task List */}
+          <div className="space-y-3">
+            {tasks.map((task, index) => (
               <button
-                key={habit.id}
-                onClick={() => toggleHabit(habit.id)}
-                className="w-full flex items-center gap-4 px-4 py-4 rounded-lg border border-border hover:bg-secondary transition-colors text-left group"
+                key={task.id}
+                onClick={() => toggleTask(task.id)}
+                className="w-full flex items-start gap-4 px-6 py-5 bg-white border border-stone-200 hover:border-stone-400 transition-all duration-300 group"
+                style={{ 
+                  animationDelay: `${index * 50}ms`,
+                  opacity: 0,
+                  animation: 'fadeIn 0.5s ease-out forwards'
+                }}
               >
                 <div
-                  className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                    habit.completed ? "bg-primary border-primary" : "border-border group-hover:border-primary"
+                  className={`w-5 h-5 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all duration-300 flex-shrink-0 ${
+                    task.completed 
+                      ? "bg-stone-900 border-stone-900" 
+                      : "border-stone-300 group-hover:border-stone-900"
                   }`}
                 >
-                  {habit.completed && <Check className="w-3 h-3 text-primary-foreground" />}
+                  {task.completed && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                 </div>
-                <span
-                  className={`text-base ${habit.completed ? "text-muted-foreground line-through" : "text-foreground"}`}
-                >
-                  {habit.name}
-                </span>
+                <div className="flex-1 text-left space-y-1">
+                  <span
+                    className={`block text-sm transition-all duration-300 ${
+                      task.completed 
+                        ? "text-stone-400 line-through" 
+                        : "text-stone-900"
+                    }`}
+                  >
+                    {task.content}
+                  </span>
+                  <span className="block text-xs text-stone-500 tracking-widest uppercase">
+                    {task.pillarTitle}
+                  </span>
+                </div>
               </button>
             ))}
           </div>
         </section>
 
         {/* Weekly Overview */}
-        <section className="space-y-6 pt-8 border-t border-border">
-          <div>
-            <h2 className="text-2xl font-light tracking-tight text-foreground flex items-center gap-2">
-              <BarChart3 className="w-5 h-5" />
-              This Week
-            </h2>
-            <p className="text-base text-muted-foreground mt-1">Your completion history</p>
-          </div>
+        {weeklyData.length > 0 && (
+          <section className="space-y-8 pt-12 border-t border-stone-200 animate-slideUp" style={{ animationDelay: '200ms' }}>
+            <div>
+              <h2 className="text-2xl font-light tracking-tight text-stone-900">This Week</h2>
+              <p className="text-sm text-stone-500 mt-1 tracking-wide">Your consistency journey</p>
+            </div>
 
-          {/* Mini Bar Chart */}
-          <div className="flex items-end justify-around gap-2 h-32 px-4 py-6 bg-secondary rounded-lg">
-            {WEEKLY_DATA.map((data) => (
-              <div key={data.day} className="flex flex-col items-center gap-2 flex-1">
-                <div className="relative w-full flex flex-col items-center gap-1">
-                  <div className="w-full flex flex-col-reverse items-center">
-                    <div
-                      className="w-full bg-primary rounded-t transition-all duration-300"
-                      style={{
-                        height: `${(data.completed / maxCompleted) * 100}px`,
-                        minHeight: data.completed > 0 ? "4px" : "2px",
-                      }}
-                    />
+            {/* Bar Chart */}
+            <div className="flex items-end justify-between gap-4 h-40 px-6 py-8 bg-white border border-stone-200">
+              {weeklyData.map((data, index) => {
+                const date = new Date(data.date)
+                const dayName = date.toLocaleDateString("en-US", { weekday: "short" })
+                const heightPercentage = maxCompleted > 0 
+                  ? (data.completed / maxCompleted) * 100 
+                  : 0
+                
+                return (
+                  <div 
+                    key={data.date} 
+                    className="flex flex-col items-center gap-3 flex-1"
+                    style={{
+                      animation: 'slideUp 0.5s ease-out forwards',
+                      animationDelay: `${300 + index * 50}ms`,
+                      opacity: 0
+                    }}
+                  >
+                    <div className="w-full flex flex-col-reverse items-center">
+                      <div
+                        className="w-full bg-stone-900 transition-all duration-500"
+                        style={{
+                          height: `${Math.max(heightPercentage, data.completed > 0 ? 8 : 2)}px`,
+                        }}
+                      />
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs font-medium text-stone-900">{data.completed}</div>
+                      <div className="text-[10px] text-stone-500 uppercase tracking-wider mt-0.5">
+                        {dayName}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <span className="text-sm text-muted-foreground">{data.day}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Goal Reminder */}
-        <section className="space-y-6 pt-8 border-t border-border">
-          <div>
-            <h2 className="text-2xl font-light tracking-tight text-foreground">Your Goal</h2>
-          </div>
-
-          <div className="p-6 bg-secondary rounded-lg border border-border space-y-4">
-            <p className="text-xl font-light text-foreground">
-              Transform your life through consistent daily habits using the Harada Method
-            </p>
-            <p className="text-base text-muted-foreground leading-relaxed">
-              "Stay consistent. You're already 18% ahead from last week. Small steps compound into remarkable results."
-            </p>
-          </div>
-        </section>
-
-        {/* Reflect Button */}
-        <div className="pt-8 border-t border-border">
-          <Button className="w-full py-6 text-lg font-light tracking-wide" variant="default">
-            Reflect on Today
-          </Button>
-        </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
       </div>
+
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.8s ease-out forwards;
+          opacity: 0;
+        }
+
+        .animate-slideUp {
+          animation: slideUp 0.8s ease-out forwards;
+          opacity: 0;
+        }
+      `}</style>
     </div>
   )
 }

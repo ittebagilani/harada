@@ -41,23 +41,58 @@ export async function POST(request: NextRequest) {
     const isPremium = user[0].isPremium || false
     const now = new Date()
 
-    // Check if user already has a plan
-    const existingPlans = await sql`
+    // Check if user already has an active plan
+    const existingActivePlan = await sql`
       SELECT * FROM "Plan" WHERE "userId" = ${userId} AND "isActive" = true
     `
 
     let plan
 
-    if (existingPlans.length > 0) {
-      // Update existing active plan's goal
-      plan = await sql`
-        UPDATE "Plan" 
-        SET "goal" = ${goal.trim()}, "updatedAt" = ${now.toISOString()}
-        WHERE "id" = ${existingPlans[0].id}
-        RETURNING *
+    if (existingActivePlan.length > 0) {
+      // Check if this plan has pillars (is it complete?)
+      const existingPillars = await sql`
+        SELECT COUNT(*) as count FROM "Pillar" WHERE "planId" = ${existingActivePlan[0].id}
       `
+
+      const pillarCount = parseInt(existingPillars[0].count)
+
+      if (pillarCount === 0) {
+        // Plan exists but is incomplete (no pillars) - update it
+        plan = await sql`
+          UPDATE "Plan" 
+          SET "goal" = ${goal.trim()}, "updatedAt" = ${now.toISOString()}
+          WHERE "id" = ${existingActivePlan[0].id}
+          RETURNING *
+        `
+      } else {
+        // Plan is complete - check if user can create another
+        const allPlans = await sql`
+          SELECT COUNT(*) as count FROM "Plan" WHERE "userId" = ${userId}
+        `
+        
+        const planCount = parseInt(allPlans[0].count)
+        
+        if (!isPremium && planCount >= 1) {
+          return NextResponse.json({ 
+            error: "Free users can only have one plan",
+            requiresUpgrade: true
+          }, { status: 403 })
+        }
+
+        // Deactivate existing plans and create new one
+        await sql`
+          UPDATE "Plan" SET "isActive" = false WHERE "userId" = ${userId}
+        `
+
+        const planId = createId()
+        plan = await sql`
+          INSERT INTO "Plan" ("id", "userId", "goal", "isActive", "createdAt", "updatedAt")
+          VALUES (${planId}, ${userId}, ${goal.trim()}, ${true}, ${now.toISOString()}, ${now.toISOString()})
+          RETURNING *
+        `
+      }
     } else {
-      // Check plan limit for free users
+      // No active plan exists - check total count
       const allPlans = await sql`
         SELECT COUNT(*) as count FROM "Plan" WHERE "userId" = ${userId}
       `
@@ -65,19 +100,48 @@ export async function POST(request: NextRequest) {
       const planCount = parseInt(allPlans[0].count)
       
       if (!isPremium && planCount >= 1) {
-        return NextResponse.json({ 
-          error: "Free users can only have one plan",
-          requiresUpgrade: true
-        }, { status: 403 })
-      }
+        // User has inactive plans - check if they have pillars
+        const inactivePlans = await sql`
+          SELECT p.* FROM "Plan" p
+          WHERE p."userId" = ${userId}
+          ORDER BY p."createdAt" DESC
+          LIMIT 1
+        `
 
-      // Create new plan with goal
-      const planId = createId()
-      plan = await sql`
-        INSERT INTO "Plan" ("id", "userId", "goal", "isActive", "createdAt", "updatedAt")
-        VALUES (${planId}, ${userId}, ${goal.trim()}, ${true}, ${now.toISOString()}, ${now.toISOString()})
-        RETURNING *
-      `
+        if (inactivePlans.length > 0) {
+          const checkPillars = await sql`
+            SELECT COUNT(*) as count FROM "Pillar" WHERE "planId" = ${inactivePlans[0].id}
+          `
+
+          if (parseInt(checkPillars[0].count) === 0) {
+            // Reactivate incomplete plan
+            plan = await sql`
+              UPDATE "Plan" 
+              SET "goal" = ${goal.trim()}, "isActive" = true, "updatedAt" = ${now.toISOString()}
+              WHERE "id" = ${inactivePlans[0].id}
+              RETURNING *
+            `
+          } else {
+            return NextResponse.json({ 
+              error: "Free users can only have one plan",
+              requiresUpgrade: true
+            }, { status: 403 })
+          }
+        } else {
+          return NextResponse.json({ 
+            error: "Free users can only have one plan",
+            requiresUpgrade: true
+          }, { status: 403 })
+        }
+      } else {
+        // Create new plan
+        const planId = createId()
+        plan = await sql`
+          INSERT INTO "Plan" ("id", "userId", "goal", "isActive", "createdAt", "updatedAt")
+          VALUES (${planId}, ${userId}, ${goal.trim()}, ${true}, ${now.toISOString()}, ${now.toISOString()})
+          RETURNING *
+        `
+      }
     }
 
     return NextResponse.json({ 
