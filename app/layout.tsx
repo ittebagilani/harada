@@ -33,7 +33,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={` antialiased bg-[#f5f5f3]`}
+          className={`antialiased bg-[#f5f5f3] ${garamond.className}`}
         >
           
           {children}
