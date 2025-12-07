@@ -23,7 +23,7 @@ export async function POST() {
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2024-06-20",
+      apiVersion: "2025-11-17.clover",
     });
 
     const { userId: clerkId } = await auth();
