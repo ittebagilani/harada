@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { QUESTIONS, ANSWER_OPTIONS } from "@/lib/questions";
@@ -8,9 +8,11 @@ import { QUESTIONS, ANSWER_OPTIONS } from "@/lib/questions";
 
 export default function StartClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { index } = useParams() as { index: string };
   const questionIndex = Number.parseInt(index);
   const question = QUESTIONS[questionIndex];
+  const isNewGoal = searchParams?.get("newGoal") === "true";
 
   const [value, setValue] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,16 +65,18 @@ export default function StartClient() {
 
   const goNext = () => {
     if (value === null) return;
+    const newGoalParam = isNewGoal ? "?newGoal=true" : "";
     if (questionIndex < QUESTIONS.length - 1) {
-      router.push(`/start/${questionIndex + 1}`);
+      router.push(`/start/${questionIndex + 1}${newGoalParam}`);
     } else {
-      router.push("/pillars");
+      router.push(`/pillars${newGoalParam}`);
     }
   };
 
   const goBack = () => {
     if (questionIndex > 0) {
-      router.push(`/start/${questionIndex - 1}`);
+      const newGoalParam = isNewGoal ? "?newGoal=true" : "";
+      router.push(`/start/${questionIndex - 1}${newGoalParam}`);
     }
   };
 

@@ -1,0 +1,14 @@
+node_modules
+.git
+.gitignore
+.next
+.env*
+*.md
+capacitor.config.ts
+tsconfig.json
+.eslintrc.json
+README.md
+STRIPE_SETUP.md
+TROUBLESHOOTING.md
+MOBILE_SETUP.md
+

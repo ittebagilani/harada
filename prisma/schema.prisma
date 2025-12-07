@@ -8,15 +8,17 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String?
-  clerkId     String   @unique
-  createdAt   DateTime @default(now())
-  isFirstUser Boolean  @default(true)
-  isPremium   Boolean  @default(false)
-  answers     Answer[]
-  plans       Plan[]
+  id                  String   @id @default(cuid())
+  email               String   @unique
+  name                String?
+  clerkId             String   @unique
+  createdAt           DateTime @default(now())
+  isFirstUser         Boolean  @default(true)
+  isPremium           Boolean  @default(false)
+  stripeCustomerId    String?
+  stripeSubscriptionId String?
+  answers             Answer[]
+  plans               Plan[]
 }
 
 model Answer {

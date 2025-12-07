@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { GridBackground } from "@/components/grid-bg";
 
 export default function OnboardingClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isSignedIn, isLoaded } = useAuth();
   const [isFading, setIsFading] = useState(false);
   const [isSavingGoal, setIsSavingGoal] = useState(false);
+  const isNewGoal = searchParams?.get("newGoal") === "true";
 
   // Save goal from localStorage to database when user is signed in
   useEffect(() => {
@@ -51,7 +53,9 @@ export default function OnboardingClient() {
   const handleYes = () => {
     setIsFading(true);
     setTimeout(() => {
-      router.push("/start/0");
+      // Pass newGoal parameter through the flow if present
+      const url = isNewGoal ? "/start/0?newGoal=true" : "/start/0";
+      router.push(url);
     }, 800);
   };
 

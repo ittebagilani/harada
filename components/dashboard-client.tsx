@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { UserButton } from "@clerk/nextjs"
-import { Check, Flame, Grid3x3, Target, TrendingUp } from "lucide-react"
+import { Check, Flame, Grid3x3, Plus, Target, TrendingUp, X } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface Task {
   id: string
@@ -23,6 +24,11 @@ export default function DashboardClient() {
   const [streak, setStreak] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [goal, setGoal] = useState<string>("")
+  const [isPremium, setIsPremium] = useState(false)
+  const [showPremiumModal, setShowPremiumModal] = useState(false)
+  const [isUpgrading, setIsUpgrading] = useState(false)
+
+  const router = useRouter()
 
   useEffect(() => {
     loadDashboardData()
@@ -52,6 +58,14 @@ export default function DashboardClient() {
       
       if (streakData.streak !== undefined) {
         setStreak(streakData.streak)
+      }
+
+      // Fetch user premium status
+      const userResponse = await fetch("/api/user")
+      const userData = await userResponse.json()
+      
+      if (userData.isPremium !== undefined) {
+        setIsPremium(userData.isPremium)
       }
 
       setIsLoading(false)
@@ -89,6 +103,45 @@ export default function DashboardClient() {
       }
     } catch (error) {
       console.error("Error toggling task:", error)
+    }
+  }
+
+  const handleNewGoal = () => {
+    if (isPremium) {
+      router.push("/")
+    } else {
+      setShowPremiumModal(true)
+    }
+  }
+
+  const handleUpgrade = async () => {
+    setIsUpgrading(true)
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Checkout session error:', errorData)
+        alert(`Error: ${errorData.error || 'Failed to create checkout session'}`)
+        setIsUpgrading(false)
+        return
+      }
+      
+      const data = await response.json()
+      
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        console.error('No checkout URL returned:', data)
+        alert('Error: No checkout URL returned. Please check your Stripe configuration.')
+        setIsUpgrading(false)
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error)
+      alert('Error: Failed to create checkout session. Please try again.')
+      setIsUpgrading(false)
     }
   }
 
@@ -133,6 +186,15 @@ export default function DashboardClient() {
               <span className="text-sm tracking-wide">View Grid</span>
             </button>
           </Link>
+          
+          <button
+            onClick={handleNewGoal}
+            className="group flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white border border-stone-900 transition-all duration-300"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="text-sm tracking-wide">New Goal</span>
+          </button>
+          
           <UserButton />
         </div>
       </header>
@@ -284,6 +346,67 @@ export default function DashboardClient() {
           </div>
         </div>
       </div>
+
+      {/* Premium Modal */}
+      {showPremiumModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white max-w-md w-full p-8 space-y-6 relative animate-slideUp">
+            <button
+              onClick={() => setShowPremiumModal(false)}
+              className="absolute top-4 right-4 text-stone-400 hover:text-stone-900 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="space-y-2">
+              <h2 className="text-3xl font-light text-stone-900">Upgrade to Premium</h2>
+              <p className="text-stone-600">
+                Create multiple goals and grids with Premium. Track different life areas with separate plans.
+              </p>
+            </div>
+            
+            <ul className="space-y-3 text-sm text-stone-600">
+              <li className="flex items-start gap-2">
+                <span className="text-stone-900 font-medium">✓</span>
+                <span>Unlimited goals and grids</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-stone-900 font-medium">✓</span>
+                <span>Track multiple life areas simultaneously</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-stone-900 font-medium">✓</span>
+                <span>Advanced progress analytics</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-stone-900 font-medium">✓</span>
+                <span>Priority support</span>
+              </li>
+            </ul>
+            
+            <div className="text-center py-4 border-t border-b border-stone-200">
+              <div className="text-4xl font-light text-stone-900 mb-1">$4.99</div>
+              <div className="text-sm text-stone-500">per month</div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowPremiumModal(false)}
+                className="flex-1 px-6 py-3 border border-stone-300 text-stone-900 hover:bg-stone-50 transition-all duration-300 text-sm tracking-wide"
+              >
+                Maybe Later
+              </button>
+              <button
+                onClick={handleUpgrade}
+                disabled={isUpgrading}
+                className="flex-1 px-6 py-3 bg-stone-900 text-white hover:bg-stone-800 transition-all duration-300 disabled:opacity-50 text-sm tracking-wide"
+              >
+                {isUpgrading ? "Loading..." : "Upgrade Now"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{`
         @keyframes fadeIn {

@@ -1,73 +1,55 @@
-"use client";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { sql } from "@/lib/db";
+import HomeClient from "@/components/home-client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { GridBackground } from "@/components/grid-bg";
-import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+export default async function Home() {
+  const { userId: clerkId } = await auth();
+  
+  // If user is not signed in, show the home page
+  if (!clerkId) {
+    return <HomeClient />;
+  }
 
-export default function Home() {
-  const [value, setValue] = useState("");
-  const MIN_CHARS = 3;
-  const router = useRouter();
+  // Check if user exists and their premium status
+  const result = await sql`
+    SELECT "id", "isPremium" 
+    FROM "User" 
+    WHERE "clerkId" = ${clerkId}
+    LIMIT 1
+  `;
 
-  const { user } = useUser();
+  const user = result[0];
 
+  // If user doesn't exist, show home page (they can sign up)
+  if (!user) {
+    return <HomeClient />;
+  }
 
-  const handleClick = () => {
-    if (value.length >= MIN_CHARS) {
-      localStorage.setItem("pendingGoal", value);
-      router.push("/onboarding");
-    }
-  };
+  // If user is premium, allow them to create new goals (show home page)
+  if (user.isPremium) {
+    return <HomeClient />;
+  }
 
-  return (
-    <section className="relative bg-[#f5f5f3] min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      <GridBackground />
-      <div className="flex flex-col items-center gap-8 -mt-10 relative z-10">
-        <h1 className="text-black text-8xl">grid64</h1>
+  // If free user, check if they have an active plan
+  const planResult = await sql`
+    SELECT COUNT(*) as count
+    FROM "Plan"
+    WHERE "userId" = ${user.id} AND "isActive" = true
+  `;
 
-        {/* divider */}
-        {/* <div className="w-24 h-[1px] bg-neutral-300 mb-2" /> */}
-        <p className="text-2xl text-black font-semibold">enter your dream.</p>
+  const hasActivePlan = parseInt(planResult[0]?.count || "0") > 0;
 
-        {/* input */}
-        <Input
-          type="text"
-          placeholder="i want to be rich"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          className="
-    w-[400px] 
-    text-lg                     
-    bg-transparent
-    border-0 
-    border-b 
-    border-black 
-    rounded-none 
-    shadow-none
-    focus-visible:ring-0
-    focus-visible:border-black
-    placeholder:text-neutral-500 text-black font-semio px-1 py-2
-  "
-        />
+  // If free user has an active plan, redirect to dashboard
+  if (hasActivePlan) {
+    redirect("/dashboard");
+  }
 
-        {/* {user ? <UserButton /> : <div className="bg-slate-950 w-[150px] text-white flex mx-auto text-center text-lg cursor-pointer"><SignInButton /></div> } */}
+  // If free user has an active plan, redirect to dashboard
+  if (hasActivePlan) {
+    redirect("/dashboard");
+  }
 
-        <Button
-          onClick={handleClick}
-          disabled={value.length < MIN_CHARS}
-          className="w-[200px] text-lg cursor-pointer rounded-xs hover:bg-transparent hover:text-black transition-colors hover:border-gray-700 hover:border"
-        >
-          achieve this goal
-        </Button>
-      </div>
-
-      {/* footer */}
-      <footer className="absolute bottom-4 text-neutral-900 text-base">
-        © 2025 grid64 — built for the best
-      </footer>
-    </section>
-  );
+  // Free user without a plan can use the home page
+  return <HomeClient />;
 }
