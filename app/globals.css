@@ -129,5 +129,55 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-garamond), "Cormorant Garamond", serif;
+  }
+}
+
+@layer components {
+  .surface {
+    @apply bg-white/90 border border-stone-200/80 shadow-sm backdrop-blur-sm rounded-xl;
+  }
+
+  .surface-strong {
+    @apply bg-white border border-stone-200 shadow-md rounded-2xl;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-stone-900 text-white border border-stone-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white text-stone-900 border border-stone-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-stone-900 hover:shadow-md active:scale-95;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-100 text-stone-700 text-xs tracking-wide;
+  }
+
+  .card-grid {
+    @apply grid gap-6;
+  }
+
+  .soft-input {
+    @apply w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-base shadow-[0_6px_24px_rgba(0,0,0,0.04)] transition-all duration-200 focus:border-stone-400 focus:shadow-[0_12px_32px_rgba(0,0,0,0.08)] focus:outline-none;
+  }
+
+  .section-heading {
+    @apply text-3xl font-semibold tracking-tight text-stone-900;
+  }
+
+  .muted {
+    @apply text-stone-500;
+  }
+
+  .safe-area {
+    padding-top: max(1.25rem, env(safe-area-inset-top));
+    padding-right: max(1.25rem, env(safe-area-inset-right));
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+    padding-left: max(1.25rem, env(safe-area-inset-left));
   }
 }

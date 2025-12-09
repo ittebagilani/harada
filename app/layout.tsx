@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Cormorant_Garamond } from "next/font/google";
+import { Cormorant_Garamond, Rubik } from "next/font/google";
 
-
-import { Inter } from "next/font/google";
-
-const inter = Inter({
-  weight: ["100", "200", "300", "400", "500", "600", "700"],
-  subsets: ["latin"], 
-  variable: "--font-inter"
-
-})
+const inter = Rubik({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
 
 const garamond = Cormorant_Garamond({
   weight: ["300", "400", "500", "600", "700"],
@@ -33,7 +29,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`antialiased bg-[#f5f5f3] ${garamond.className}`}
+          className={`${inter.variable} ${garamond.variable} antialiased bg-[#f5f5f3]`}
         >
           
           {children}

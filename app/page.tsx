@@ -1,55 +1,25 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { sql } from "@/lib/db";
-import HomeClient from "@/components/home-client";
+import Link from "next/link";
+import { GridBackground } from "@/components/grid-bg";
 
-export default async function Home() {
-  const { userId: clerkId } = await auth();
-  
-  // If user is not signed in, show the home page
-  if (!clerkId) {
-    return <HomeClient />;
-  }
-
-  // Check if user exists and their premium status
-  const result = await sql`
-    SELECT "id", "isPremium" 
-    FROM "User" 
-    WHERE "clerkId" = ${clerkId}
-    LIMIT 1
-  `;
-
-  const user = result[0];
-
-  // If user doesn't exist, show home page (they can sign up)
-  if (!user) {
-    return <HomeClient />;
-  }
-
-  // If user is premium, allow them to create new goals (show home page)
-  if (user.isPremium) {
-    return <HomeClient />;
-  }
-
-  // If free user, check if they have an active plan
-  const planResult = await sql`
-    SELECT COUNT(*) as count
-    FROM "Plan"
-    WHERE "userId" = ${user.id} AND "isActive" = true
-  `;
-
-  const hasActivePlan = parseInt(planResult[0]?.count || "0") > 0;
-
-  // If free user has an active plan, redirect to dashboard
-  if (hasActivePlan) {
-    redirect("/dashboard");
-  }
-
-  // If free user has an active plan, redirect to dashboard
-  if (hasActivePlan) {
-    redirect("/dashboard");
-  }
-
-  // Free user without a plan can use the home page
-  return <HomeClient />;
+export default function Home() {
+  return (
+    <section className="relative min-h-screen overflow-hidden bg-linear-to-br from-white via-stone-50 to-white safe-area flex items-center justify-center px-6 py-16">
+      <GridBackground />
+      <div className="relative z-10 text-center space-y-6 max-w-2xl">
+        <p className="text-xs uppercase tracking-[0.35em] text-stone-500">Welcome to</p>
+        <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-stone-900">grid64</h1>
+        <p className="text-stone-600 text-lg md:text-xl">
+          Turn your goals into daily actions with a clear, minimalist system.
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          <Link href="/set-goal">
+            <button className="btn-primary px-6 py-3">Set a goal</button>
+          </Link>
+          <Link href="/dashboard">
+            <button className="btn-ghost px-6 py-3">Go to dashboard</button>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
 }

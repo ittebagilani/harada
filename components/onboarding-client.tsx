@@ -75,47 +75,48 @@ export default function OnboardingClient() {
 
   return (
     <div
-      className={`min-h-screen bg-stone-50 flex items-center justify-center px-6 py-12 transition-opacity duration-700 ${
+      className={`min-h-screen bg-linear-to-br from-stone-50 via-white to-stone-100 safe-area flex items-center justify-center px-6 py-12 transition-opacity duration-700 ${
         isFading ? "opacity-0" : "opacity-100"
       }`}
     >
       <GridBackground />
-      <div className="max-w-xl w-full z-10">
-        <div className="text-center space-y-10">
-          {/* Header */}
-          <div className="space-y-6">
-            <h1 className="text-6xl md:text-7xl font-medium tracking-tight text-stone-900">
-              before we begin
-            </h1>
-            <p className="text-lg text-stone-800 tracking-wide leading-relaxed">
-              remember that no app will work. unless you do.
-            </p>
-          </div>
+      <div className="max-w-3xl w-full z-10">
+        <div className="surface-strong px-10 py-12 shadow-xl">
+          <div className="text-center space-y-10">
+            {/* Header */}
+            <div className="space-y-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-stone-500">welcome</p>
+              <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-stone-900">
+                before we begin
+              </h1>
+              <p className="text-lg text-stone-700 tracking-wide leading-relaxed">
+                remember that no app will work. unless you do.
+              </p>
+            </div>
 
-          {/* Main content */}
-          <div className="space-y-10">
-            <h2 className="text-2xl md:text-5xl font-light text-stone-900 tracking-tight leading-snug">
-              you will be asked 36 questions.
-              <br />
-              answer with absolute honesty.
-            </h2>
+            {/* Main content */}
+            <div className="space-y-8">
+              <h2 className="text-2xl md:text-4xl font-light text-stone-900 tracking-tight leading-snug">
+                you will be asked 36 questions.
+                <br />
+                answer with absolute honesty.
+              </h2>
 
-            <div className="flex flex-col gap-4">
-              <Button
-                onClick={handleYes}
-                size="lg"
-                className="w-[200px] mx-auto flex rounded-xs bg-stone-900 hover:bg-transparent hover:text-black hover:border hover:border-gray-700 text-white px-8 py-6 text-lg font-light tracking-wide transition-colors duration-200 cursor-pointer"
-              >
-                let&apos;s do it.
-              </Button>
+              <div className="flex flex-col gap-4 items-center">
+                <Button
+                  onClick={handleYes}
+                  size="lg"
+                  className="btn-primary w-[220px] justify-center"
+                >
+                  let&apos;s do it.
+                </Button>
+                <p className="text-sm text-stone-500">Takes about 4–6 minutes.</p>
+              </div>
             </div>
           </div>
         </div>
+        <p className="text-center text-xs text-stone-400 mt-6">© 2025 grid64 — built for the best</p>
       </div>
-      {/* Footer */}
-      <footer className="absolute bottom-4 text-neutral-900 text-base text-center">
-        © 2025 grid64 — built for the best
-      </footer>
     </div>
   );
 }

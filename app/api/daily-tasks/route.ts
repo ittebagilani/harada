@@ -21,31 +21,7 @@ export async function GET() {
 
     const userId = userResult[0].id;
 
-    // Today's date at midnight (UTC)
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    const todayISO = today.toISOString().split("T")[0];
-
-    // Check if daily tasks already exist for today
-    const existingTasks = await sql`
-      SELECT dt.id, dt.completed, t.content, p.title AS "pillarTitle"
-      FROM "DailyTask" dt
-      JOIN "Task" t ON dt."taskId" = t.id
-      JOIN "Pillar" p ON t."pillarId" = p.id
-      WHERE dt."userId" = ${userId} AND dt.date = ${todayISO}::date;
-    `;
-
-    if (existingTasks.length > 0) {
-      const tasks = existingTasks.map((row: any) => ({
-        id: row.id,
-        content: row.content,
-        pillarTitle: row.pillarTitle,
-        completed: row.completed,
-      }));
-      return NextResponse.json({ tasks });
-    }
-
-    // Get active plan with pillars and tasks
+    // Get active plan (required to scope daily tasks)
     const activePlanResult = await sql`
       SELECT pl.id AS "planId"
       FROM "Plan" pl
@@ -58,6 +34,43 @@ export async function GET() {
     }
 
     const planId = activePlanResult[0].planId;
+
+    // Today's date at midnight (UTC)
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const todayISO = today.toISOString().split("T")[0];
+
+    // Check if daily tasks already exist for today
+    const existingTasks = await sql`
+      SELECT dt.id, dt.completed, t.content, p.title AS "pillarTitle", p."planId"
+      FROM "DailyTask" dt
+      JOIN "Task" t ON dt."taskId" = t.id
+      JOIN "Pillar" p ON t."pillarId" = p.id
+      WHERE dt."userId" = ${userId} AND dt.date = ${todayISO}::date;
+    `;
+
+    // If tasks exist AND they belong to the current active plan, return them
+    const existingAreForActivePlan =
+      existingTasks.length > 0 &&
+      existingTasks.every((row: any) => row.planId === planId);
+
+    if (existingAreForActivePlan) {
+      const tasks = existingTasks.map((row: any) => ({
+        id: row.id,
+        content: row.content,
+        pillarTitle: row.pillarTitle,
+        completed: row.completed,
+      }));
+      return NextResponse.json({ tasks });
+    }
+
+    // If tasks exist but are from a different plan, clear them so we can regenerate for the active plan
+    if (existingTasks.length > 0 && !existingAreForActivePlan) {
+      await sql`
+        DELETE FROM "DailyTask"
+        WHERE "userId" = ${userId} AND date = ${todayISO}::date;
+      `;
+    }
 
     // Get all tasks from active plan
     const allTasks = await sql`

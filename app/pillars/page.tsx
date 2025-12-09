@@ -3,14 +3,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Edit2 } from "lucide-react";
 
 export default function Pillars() {
   const router = useRouter();
   const [pillars, setPillars] = useState<string[]>([]);
   const [goal, setGoal] = useState("");
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editValue, setEditValue] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -63,21 +60,6 @@ export default function Pillars() {
     }
   };
 
-  const handleEdit = (index: number) => {
-    setEditingIndex(index);
-    setEditValue(pillars[index]);
-  };
-
-  const handleSaveEdit = (index: number) => {
-    if (editValue.trim()) {
-      const newPillars = [...pillars];
-      newPillars[index] = editValue.trim();
-      setPillars(newPillars);
-    }
-    setEditingIndex(null);
-    setEditValue("");
-  };
-
   const handleContinue = async () => {
     setIsSaving(true);
     try {
@@ -110,7 +92,7 @@ export default function Pillars() {
 
   if (isLoading || isGenerating) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+      <div className="min-h-screen bg-stone-50 safe-area flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-stone-900 border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-stone-600 text-lg">
@@ -122,7 +104,7 @@ export default function Pillars() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-6 py-12">
+    <div className="min-h-screen bg-stone-50 safe-area flex flex-col items-center justify-center px-6 py-12">
       <div className="max-w-4xl w-full">
         {/* Header */}
         <div className="text-center space-y-4 mb-16">
@@ -133,7 +115,7 @@ export default function Pillars() {
             Working towards: <span className="font-medium">{goal}</span>
           </p>
           <p className="text-sm text-stone-500 font-light">
-            Based on your responses, these are your 8 focus areas. Edit them if needed.
+            Based on your responses, these are your 8 focus areas.
           </p>
         </div>
 
@@ -142,53 +124,11 @@ export default function Pillars() {
           {pillars.map((pillar, index) => (
             <div
               key={index}
-              className={`group relative aspect-square bg-white border-2 rounded-lg p-6 flex flex-col items-center justify-center transition-all duration-200`}
+              className={`group relative aspect-square bg-white border-2 rounded-lg p-6 flex flex-col items-center justify-center transition-all duration-200 shadow-sm`}
             >
-              {editingIndex === index ? (
-                <div className="w-full space-y-3">
-                  <input
-                    autoFocus
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onBlur={() => handleSaveEdit(index)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSaveEdit(index);
-                      if (e.key === "Escape") setEditingIndex(null);
-                    }}
-                    className="w-full bg-stone-50 border border-stone-300 rounded px-3 py-2 text-sm text-center font-light text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900"
-                  />
-                  <div className="flex gap-2 justify-center">
-                    <button
-                      onClick={() => handleSaveEdit(index)}
-                      className="text-xs px-3 py-1 bg-stone-900 text-white rounded hover:bg-stone-800 transition-colors"
-                    >
-                      save
-                    </button>
-                    <button
-                      onClick={() => setEditingIndex(null)}
-                      className="text-xs px-3 py-1 bg-stone-200 text-stone-900 rounded hover:bg-stone-300 transition-colors"
-                    >
-                      cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-lg md:text-xl font-light text-center text-stone-900 mb-4">
-                    {pillar}
-                  </p>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => handleEdit(index)}
-                      className="p-2 hover:bg-stone-100 rounded transition-colors cursor-pointer"
-                      aria-label="Edit pillar"
-                    >
-                      <Edit2 className="w-4 h-4 text-stone-600" />
-                    </button>
-                  </div>
-                </>
-              )}
+              <p className="text-lg md:text-xl font-light text-center text-stone-900">
+                {pillar}
+              </p>
             </div>
           ))}
         </div>

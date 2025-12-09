@@ -291,12 +291,6 @@ const ResultsPage = () => {
           className="mt-12 flex justify-center gap-6 animate-fadeIn"
           style={{ animationDelay: '400ms' }}
         >
-          <Link href="/pillars">
-            <button className="group px-10 py-4 bg-white border border-stone-300 text-stone-900 hover:border-stone-900 hover:bg-stone-50 transition-all duration-300 text-sm tracking-wide">
-              <span className="group-hover:tracking-wider transition-all duration-300">Edit Pillars</span>
-            </button>
-          </Link>
-          
           <Link href="/dashboard">
             <button className="group px-10 py-4 bg-stone-900 text-white hover:bg-stone-800 transition-all duration-300 text-sm tracking-wide">
               <span className="group-hover:tracking-wider transition-all duration-300">Continue</span>

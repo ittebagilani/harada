@@ -19,6 +19,13 @@ interface CompletionData {
   total: number
 }
 
+interface Plan {
+  id: string
+  goal: string
+  isActive: boolean
+  createdAt: string
+}
+
 export default function DashboardClient() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [streak, setStreak] = useState(0)
@@ -27,6 +34,9 @@ export default function DashboardClient() {
   const [isPremium, setIsPremium] = useState(false)
   const [showPremiumModal, setShowPremiumModal] = useState(false)
   const [isUpgrading, setIsUpgrading] = useState(false)
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [activePlanId, setActivePlanId] = useState<string>("")
+  const [isSwitchingPlan, setIsSwitchingPlan] = useState(false)
 
   const router = useRouter()
 
@@ -66,6 +76,21 @@ export default function DashboardClient() {
       
       if (userData.isPremium !== undefined) {
         setIsPremium(userData.isPremium)
+      }
+
+      // Fetch all plans for premium users
+      if (userData.isPremium) {
+        const plansResponse = await fetch("/api/plan/get-plans")
+        if (plansResponse.ok) {
+          const plansData = await plansResponse.json()
+          if (plansData.plans) {
+            setPlans(plansData.plans)
+            const activePlan = plansData.plans.find((p: Plan) => p.isActive)
+            if (activePlan) {
+              setActivePlanId(activePlan.id)
+            }
+          }
+        }
       }
 
       setIsLoading(false)
@@ -108,9 +133,37 @@ export default function DashboardClient() {
 
   const handleNewGoal = () => {
     if (isPremium) {
-      router.push("/")
+      router.push("/set-goal")
     } else {
       setShowPremiumModal(true)
+    }
+  }
+
+  const handleSwitchPlan = async (planId: string) => {
+    if (planId === activePlanId || isSwitchingPlan) return
+
+    setIsSwitchingPlan(true)
+    try {
+      const response = await fetch("/api/plan/switch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId }),
+      })
+
+      if (response.ok) {
+        // Reload dashboard data to reflect the new active plan
+        await loadDashboardData()
+        // Reload the page to ensure all data is fresh
+        router.refresh()
+      } else {
+        const errorData = await response.json()
+        alert(errorData.error || "Failed to switch plan")
+      }
+    } catch (error) {
+      console.error("Error switching plan:", error)
+      alert("Failed to switch plan. Please try again.")
+    } finally {
+      setIsSwitchingPlan(false)
     }
   }
 
@@ -171,15 +224,37 @@ export default function DashboardClient() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-linear-to-br from-stone-50 via-white to-stone-100 safe-area">
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-8 border-b border-stone-200 bg-white">
+      <header className="surface-strong flex items-center justify-between px-8 py-8 border-b border-stone-200 shadow-md">
         <div className="flex-1">
           <h1 className="text-5xl font-light tracking-tight text-stone-900">今日</h1>
           <p className="text-stone-500 text-sm tracking-wide mt-1 uppercase">{today}</p>
         </div>
         
         <div className="flex items-center gap-4">
+          {isPremium && plans.length > 1 && (
+            <div className="relative">
+              <select
+                value={activePlanId}
+                onChange={(e) => handleSwitchPlan(e.target.value)}
+                disabled={isSwitchingPlan}
+                className="px-4 py-2 bg-white border border-stone-200 hover:border-stone-400 text-stone-900 text-sm tracking-wide cursor-pointer transition-transform duration-300 hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed appearance-none pr-8"
+              >
+                {plans.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.goal.length > 30 ? `${plan.goal.substring(0, 30)}...` : plan.goal}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          )}
+          
           <Link href="/grid">
             <button className="group flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-900 text-stone-900 hover:text-white border border-stone-200 hover:border-stone-900 transition-all duration-300">
               <Grid3x3 className="w-4 h-4" />
@@ -189,7 +264,7 @@ export default function DashboardClient() {
           
           <button
             onClick={handleNewGoal}
-            className="group flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white border border-stone-900 transition-all duration-300"
+            className="group flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white border border-stone-900 transition-transform duration-300 hover:-translate-y-0.5 active:scale-95"
           >
             <Plus className="w-4 h-4" />
             <span className="text-sm tracking-wide">New Goal</span>
@@ -206,7 +281,7 @@ export default function DashboardClient() {
             {/* Goal Section */}
             {goal && (
               <section className="animate-fadeIn">
-                <div className="bg-stone-900 text-white p-10 space-y-3 border border-stone-900">
+                <div className="bg-stone-900 text-white p-10 space-y-3 border border-stone-900 rounded-2xl shadow-xl">
                   <div className="flex items-center gap-2">
                     <Target className="w-5 h-5 text-stone-400" />
                     <div className="text-xs tracking-widest uppercase text-stone-400">Your Goal</div>
@@ -222,7 +297,7 @@ export default function DashboardClient() {
             {/* Stats Grid */}
             <section className="grid grid-cols-3 gap-4 animate-fadeIn" style={{ animationDelay: '50ms' }}>
               {/* Streak Card */}
-              <div className="bg-white border border-stone-200 p-6 flex flex-col items-center justify-center space-y-2 hover:border-stone-400 transition-all duration-300">
+              <div className="bg-white border border-stone-200 p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center space-y-2 hover:border-stone-400 hover:shadow-md transition-all duration-300">
                 <Flame className={`w-7 h-7 transition-colors duration-300 ${
                   streak > 0 ? 'text-orange-500' : 'text-stone-300'
                 }`} />
@@ -233,7 +308,7 @@ export default function DashboardClient() {
               </div>
 
               {/* Today's Progress Card */}
-              <div className="bg-white border border-stone-200 p-6 flex flex-col items-center justify-center space-y-2 hover:border-stone-400 transition-all duration-300">
+              <div className="bg-white border border-stone-200 p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center space-y-2 hover:border-stone-400 hover:shadow-md transition-all duration-300">
                 <div className="relative w-14 h-14">
                   <svg className="w-14 h-14 transform -rotate-90">
                     <circle
@@ -268,7 +343,7 @@ export default function DashboardClient() {
               </div>
 
               {/* Completed Today Card */}
-              <div className="bg-white border border-stone-200 p-6 flex flex-col items-center justify-center space-y-2 hover:border-stone-400 transition-all duration-300">
+              <div className="bg-white border border-stone-200 p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center space-y-2 hover:border-stone-400 hover:shadow-md transition-all duration-300">
                 <TrendingUp className="w-7 h-7 text-stone-600" />
                 <div className="text-center">
                   <div className="text-3xl font-light text-stone-900 tracking-tight">{completedCount}</div>
@@ -305,7 +380,7 @@ export default function DashboardClient() {
                   <button
                     key={task.id}
                     onClick={() => toggleTask(task.id)}
-                    className="w-full flex items-start gap-4 px-6 py-5 bg-white border border-stone-200 hover:border-stone-400 transition-all duration-300 group"
+                    className="w-full flex items-start gap-4 px-6 py-5 bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-md hover:border-stone-400 transition-all duration-300 group"
                     style={{ 
                       animationDelay: `${index * 50}ms`,
                       opacity: 0,
@@ -313,7 +388,7 @@ export default function DashboardClient() {
                     }}
                   >
                     <div
-                      className={`w-5 h-5 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all duration-300 flex-shrink-0 ${
+                      className={`w-5 h-5 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all duration-300 shrink-0 ${
                         task.completed 
                           ? "bg-stone-900 border-stone-900" 
                           : "border-stone-300 group-hover:border-stone-900"

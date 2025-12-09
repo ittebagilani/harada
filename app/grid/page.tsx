@@ -25,12 +25,21 @@ const COLORS = [
   "bg-stone-50",
 ];
 
+const loadingMessages = [
+  "Translating your pillars into daily moves...",
+  "Balancing effort across all eight pillars...",
+  "Sharpening the tasks that matter most...",
+  "Making sure every box has a purpose...",
+  "Tuning your grid for steady progress...",
+];
+
 const GridPage = () => {
   const [grid, setGrid] = useState<Cell[][]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [goal, setGoal] = useState<string | null>(null);
   const [hoveredCell, setHoveredCell] = useState<{row: number, col: number} | null>(null);
+  const [tipIndex, setTipIndex] = useState(0);
 
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -38,6 +47,15 @@ const GridPage = () => {
     fetchGoal();
     loadPlan();
   }, []);
+
+  // Rotate loading tips while fetching
+  useEffect(() => {
+    if (!isLoading) return;
+    const id = setInterval(() => {
+      setTipIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 2200);
+    return () => clearInterval(id);
+  }, [isLoading]);
 
   const fetchGoal = async () => {
     try {
@@ -165,22 +183,28 @@ const GridPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="text-center space-y-6">
+      <div className="min-h-screen bg-linear-to-br from-stone-50 via-white to-stone-100 safe-area flex items-center justify-center px-6 py-12">
+        <div className="surface-strong max-w-md w-full px-8 py-10 text-center space-y-6 shadow-xl">
           <div className="relative w-16 h-16 mx-auto">
             <div className="absolute inset-0 border-2 border-stone-300 rounded-full animate-ping opacity-20" />
             <div className="absolute inset-0 border-2 border-stone-900 border-t-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-stone-800 text-lg tracking-wide">読み込み中</p>
+          <div className="space-y-2">
+            <p className="text-stone-800 text-lg font-medium">Preparing your grid</p>
+            <p className="text-stone-500 text-sm leading-relaxed">
+              {loadingMessages[tipIndex]}
+            </p>
+          </div>
+          <p className="text-xs text-stone-400">This just takes a moment.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 py-12 px-4">
+    <div className="min-h-screen bg-linear-to-br from-stone-50 via-white to-stone-100 safe-area py-8">
       <div className="max-w-[1400px] mx-auto">
-        <div className="flex items-center justify-between mb-12 animate-fadeIn">
+        <div className="flex items-center justify-between mb-8 animate-fadeIn">
           <div>
             <h1 className="text-5xl md:text-6xl font-light text-stone-900 tracking-tight mb-2">
               計画
@@ -207,56 +231,59 @@ const GridPage = () => {
           </div>
         </div>
 
-        <div 
-          ref={gridRef} 
-          className="bg-white p-8 border border-stone-200 animate-slideUp"
-          style={{ animationDelay: '100ms' }}
-        >
-          <div className="space-y-2">
-            {grid.map((row, rowIndex) => (
-              <div key={rowIndex} className="flex gap-2">
-                {row.map((cell, colIndex) => {
-                  const isHovered = hoveredCell?.row === rowIndex && hoveredCell?.col === colIndex;
-                  
-                  return (
-                    <div
-                      key={colIndex}
-                      className={`
-                        ${cell.color} 
-                        flex-1 min-h-[120px] flex items-center justify-center 
-                        transition-all duration-300 ease-out
-                        ${cell.isCenter ? 'shadow-lg' : 'shadow-sm'}
-                        ${isHovered && !cell.isCenter ? 'scale-[1.02] shadow-md' : ''}
-                        ${cell.isPillar ? 'border-2 border-stone-400' : ''}
-                        overflow-hidden
-                        group
-                      `}
-                      onMouseEnter={() => setHoveredCell({ row: rowIndex, col: colIndex })}
-                      onMouseLeave={() => setHoveredCell(null)}
-                      style={{
-                        animationDelay: `${(rowIndex + colIndex) * 20}ms`
-                      }}
-                    >
-                      <span 
+        <div className="overflow-x-auto">
+          <div 
+            ref={gridRef} 
+            className="bg-white p-6 md:p-8 border border-stone-200 rounded-2xl shadow-xl animate-slideUp min-w-[900px] md:min-w-0"
+            style={{ animationDelay: '100ms' }}
+          >
+            <div className="space-y-2">
+              {grid.map((row, rowIndex) => (
+                <div key={rowIndex} className="flex gap-2">
+                  {row.map((cell, colIndex) => {
+                    const isHovered = hoveredCell?.row === rowIndex && hoveredCell?.col === colIndex;
+                    
+                    return (
+                      <div
+                        key={colIndex}
                         className={`
-                          text-center px-3 py-2 leading-snug
-                          transition-all duration-300
-                          ${cell.isCenter 
-                            ? 'text-white text-xl font-light tracking-wider' 
-                            : cell.isPillar 
-                              ? 'text-stone-800 text-sm font-semibold tracking-widest uppercase'
-                              : 'text-stone-600 text-xs font-light leading-relaxed'
-                          }
-                          ${isHovered && !cell.isCenter ? 'scale-105' : ''}
+                          ${cell.color} 
+                          flex-1 min-h-[120px] flex items-center justify-center 
+                          transition-all duration-300 ease-out
+                          ${cell.isCenter ? 'shadow-lg' : 'shadow-sm'}
+                          ${isHovered && !cell.isCenter ? 'scale-[1.02] shadow-md' : ''}
+                          ${cell.isPillar ? 'border-2 border-stone-400' : ''}
+                          overflow-hidden
+                          group
+                          rounded-lg
                         `}
+                        onMouseEnter={() => setHoveredCell({ row: rowIndex, col: colIndex })}
+                        onMouseLeave={() => setHoveredCell(null)}
+                        style={{
+                          animationDelay: `${(rowIndex + colIndex) * 20}ms`
+                        }}
                       >
-                        {cell.text}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                        <span 
+                          className={`
+                            text-center px-3 py-2 leading-snug
+                            transition-all duration-300
+                            ${cell.isCenter 
+                              ? 'text-white text-xl font-light tracking-wider' 
+                              : cell.isPillar 
+                                ? 'text-stone-800 text-sm font-semibold tracking-widest uppercase'
+                                : 'text-stone-600 text-xs font-light leading-relaxed'
+                            }
+                            ${isHovered && !cell.isCenter ? 'scale-105' : ''}
+                          `}
+                        >
+                          {cell.text}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
