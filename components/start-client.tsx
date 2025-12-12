@@ -129,7 +129,7 @@ export default function StartClient() {
             <button
               key={option.value}
               onClick={() => setValue(option.value)}
-              className={`w-full text-left px-6 py-4 rounded-xl border transition-colors duration-200 cursor-pointer ${
+              className={`w-full text-center px-6 py-4 rounded-xl border transition-colors duration-200 cursor-pointer ${
                 value === option.value
                   ? "border-stone-900 bg-stone-900 text-white shadow-lg"
                   : "border-stone-200 bg-white hover:border-stone-400 hover:shadow-md"

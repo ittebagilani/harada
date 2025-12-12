@@ -45,24 +45,14 @@ export default function HomeClient() {
   return (
     <section className="relative min-h-screen overflow-hidden bg-linear-to-br from-stone-50 via-white to-stone-100 safe-area">
       <GridBackground />
-      {showIntro && (
-        <div className="fixed inset-0 z-50 bg-white flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            <GridBackground />
-          </div>
-          <div className="relative z-10 text-center space-y-4 px-6">
-            <p className="text-sm uppercase tracking-[0.25em] text-stone-500">Welcome to</p>
-            <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-stone-900">grid64</h1>
-            <p className="text-stone-500 text-sm">Shaping your goals into daily action.</p>
-          </div>
-        </div>
-      )}
+
       <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-16">
         <div className="surface-strong max-w-xl w-full px-10 py-12 text-center space-y-8 shadow-xl">
           <div className="space-y-2">
             <h1 className="text-xl text-stone-500">grid64</h1>
-            <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-stone-900">Set Your Goal</h1>
-            
+            <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-stone-900">
+              Set Your Goal
+            </h1>
           </div>
 
           <div className="space-y-4">
@@ -73,7 +63,9 @@ export default function HomeClient() {
               onChange={(e) => setValue(e.target.value)}
               className="soft-input text-sm"
             />
-            <p className="text-sm text-stone-500">Be specific. We&apos;ll carve out the path.</p>
+            <p className="text-sm text-stone-500">
+              Be specific. We&apos;ll carve out the path.
+            </p>
           </div>
 
           <div className="flex justify-center">
@@ -86,10 +78,11 @@ export default function HomeClient() {
             </Button>
           </div>
 
-          <p className="text-xs text-stone-400">© 2025 grid64 — built for the best</p>
+          <p className="text-xs text-stone-400">
+            © 2025 grid64 — built for the best
+          </p>
         </div>
       </div>
     </section>
   );
 }
-
