@@ -135,6 +135,10 @@
   h1, h2, h3, h4 {
     font-family: var(--font-garamond), "Cormorant Garamond", serif;
   }
+
+  button {
+    @apply cursor-pointer;
+  }
 }
 
 @layer components {
@@ -147,11 +151,11 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-stone-900 text-white border border-stone-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-stone-900 text-white border border-stone-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 cursor-pointer;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white text-stone-900 border border-stone-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-stone-900 hover:shadow-md active:scale-95;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white text-stone-900 border border-stone-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-stone-900 hover:shadow-md active:scale-95 cursor-pointer;
   }
 
   .pill {

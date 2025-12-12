@@ -227,7 +227,7 @@ const ResultsPage = () => {
           <button
             onClick={exportAsPNG}
             disabled={isExporting}
-            className="group flex items-center gap-3 px-6 py-3 bg-stone-900 text-white hover:bg-stone-800 transition-all duration-300 disabled:opacity-50 border border-stone-900"
+            className="rounded-xl group flex items-center gap-3 px-6 py-3 bg-stone-900 text-white hover:bg-stone-800 transition-all duration-300 disabled:opacity-50 border border-stone-900"
           >
             <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform duration-300" />
             <span className="text-sm tracking-wide">{isExporting ? "Exporting..." : "Export"}</span>

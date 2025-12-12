@@ -256,7 +256,7 @@ export default function DashboardClient() {
           )}
           
           <Link href="/grid">
-            <button className="group flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-900 text-stone-900 hover:text-white border border-stone-200 hover:border-stone-900 transition-all duration-300">
+            <button className="rounded-xl group flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-900 text-stone-900 hover:text-white border border-stone-200 hover:border-stone-900 transition-all duration-300">
               <Grid3x3 className="w-4 h-4" />
               <span className="text-sm tracking-wide">View Grid</span>
             </button>
@@ -264,7 +264,7 @@ export default function DashboardClient() {
           
           <button
             onClick={handleNewGoal}
-            className="group flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white border border-stone-900 transition-transform duration-300 hover:-translate-y-0.5 active:scale-95"
+            className="rounded-xl group flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white border border-stone-900 transition-transform duration-300 hover:-translate-y-0.5 active:scale-95"
           >
             <Plus className="w-4 h-4" />
             <span className="text-sm tracking-wide">New Goal</span>
@@ -274,8 +274,8 @@ export default function DashboardClient() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="max-w-screen-2xl mx-auto px-6 md:px-10 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Left Column */}
           <div className="space-y-8">
             {/* Goal Section */}
@@ -425,7 +425,7 @@ export default function DashboardClient() {
       {/* Premium Modal */}
       {showPremiumModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white max-w-md w-full p-8 space-y-6 relative animate-slideUp">
+          <div className="bg-white max-w-md w-full p-8 space-y-6 relative animate-slideUp rounded-2xl shadow-2xl">
             <button
               onClick={() => setShowPremiumModal(false)}
               className="absolute top-4 right-4 text-stone-400 hover:text-stone-900 transition-colors"
@@ -434,28 +434,29 @@ export default function DashboardClient() {
             </button>
             
             <div className="space-y-2">
-              <h2 className="text-3xl font-light text-stone-900">Upgrade to Premium</h2>
+              <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Level up</p>
+              <h2 className="text-3xl font-semibold text-stone-900">Unlock unlimited goals</h2>
               <p className="text-stone-600">
-                Create multiple goals and grids with Premium. Track different life areas with separate plans.
+                Run multiple grids, explore new directions, and keep every pillar aligned.
               </p>
             </div>
             
             <ul className="space-y-3 text-sm text-stone-600">
               <li className="flex items-start gap-2">
                 <span className="text-stone-900 font-medium">✓</span>
-                <span>Unlimited goals and grids</span>
+                <span>Unlimited goals and grids to map every ambition</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-stone-900 font-medium">✓</span>
-                <span>Track multiple life areas simultaneously</span>
+                <span>Track multiple life areas at once with dedicated pillars</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-stone-900 font-medium">✓</span>
-                <span>Advanced progress analytics</span>
+                <span>Priority updates and upcoming analytics</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-stone-900 font-medium">✓</span>
-                <span>Priority support</span>
+                <span>Priority support when you need it</span>
               </li>
             </ul>
             
@@ -467,14 +468,14 @@ export default function DashboardClient() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowPremiumModal(false)}
-                className="flex-1 px-6 py-3 border border-stone-300 text-stone-900 hover:bg-stone-50 transition-all duration-300 text-sm tracking-wide"
+                className="flex-1 px-6 py-3 border border-stone-300 text-stone-900 hover:bg-stone-50 transition-all duration-300 text-sm tracking-wide rounded-xl"
               >
                 Maybe Later
               </button>
               <button
                 onClick={handleUpgrade}
                 disabled={isUpgrading}
-                className="flex-1 px-6 py-3 bg-stone-900 text-white hover:bg-stone-800 transition-all duration-300 disabled:opacity-50 text-sm tracking-wide"
+                className="flex-1 px-6 py-3 bg-stone-900 text-white hover:bg-stone-800 transition-all duration-300 disabled:opacity-50 text-sm tracking-wide rounded-xl"
               >
                 {isUpgrading ? "Loading..." : "Upgrade Now"}
               </button>
