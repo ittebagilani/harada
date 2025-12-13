@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { GridBackground } from "@/components/grid-bg";
+import MobileNotice from "./mobile-notice";
 
 export default function OnboardingClient() {
   const router = useRouter();
@@ -62,10 +63,10 @@ export default function OnboardingClient() {
   // Show loading state while saving goal
   if (isSavingGoal) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center px-6 py-12">
+      <div className="min-h-screen flex items-center justify-center px-6 py-12" style={{ backgroundColor: '#F6F7EB' }}>
         <div className="text-center space-y-4">
-          <div className="w-8 h-8 border-2 border-stone-900 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-stone-800 font-light text-lg">
+          <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto" style={{ borderColor: '#000000', borderTopColor: 'transparent' }} />
+          <p className="font-light text-lg" style={{ color: '#000000' }}>
             Setting up your goal...
           </p>
         </div>
@@ -74,29 +75,33 @@ export default function OnboardingClient() {
   }
 
   return (
-    <div
-      className={`min-h-screen bg-linear-to-br from-stone-50 via-white to-stone-100 safe-area flex items-center justify-center px-6 py-12 transition-opacity duration-700 ${
-        isFading ? "opacity-0" : "opacity-100"
-      }`}
-    >
-      <GridBackground />
-      <div className="max-w-3xl w-full z-10">
-        <div className="surface-strong px-10 py-12 shadow-xl">
-          <div className="text-center space-y-10">
+    <>
+      <MobileNotice />
+      <div
+        className="min-h-screen safe-area flex items-center justify-center px-6 py-12 transition-opacity duration-700"
+        style={{ opacity: isFading ? 0 : 1 }}
+      >
+        <GridBackground />
+      <div className="w-full max-w-2xl z-10">
+        <div className="relative overflow-hidden rounded-2xl bg-white/50 backdrop-blur-md border border-stone-200 shadow-[0_18px_60px_-30px_rgba(0,0,0,0.25)] px-8 py-10 sm:px-12 sm:py-12 text-center">
+          <div className="relative z-10 space-y-7">
             {/* Header */}
             <div className="space-y-4">
-              <p className="text-xs uppercase tracking-[0.3em] text-stone-500">welcome</p>
-              <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-stone-900">
+              <p className="text-xs uppercase tracking-[0.35em]" style={{ color: '#5a5a5a' }}>welcome</p>
+              <h1 className="text-5xl md:text-6xl font-semibold tracking-tight" style={{ color: '#000000' }}>
                 before we begin
               </h1>
-              <p className="text-lg text-stone-700 tracking-wide leading-relaxed">
+              <p className="text-lg tracking-wide leading-relaxed" style={{ color: '#000000' }}>
                 remember that no app will work. unless you do.
               </p>
             </div>
 
+            {/* Divider */}
+            <div className="mx-auto w-20 h-px" style={{ backgroundColor: '#d4c4bc' }} />
+
             {/* Main content */}
             <div className="space-y-8">
-              <h2 className="text-2xl md:text-4xl font-light text-stone-900 tracking-tight leading-snug">
+              <h2 className="text-2xl md:text-4xl font-light tracking-tight leading-snug" style={{ color: '#000000' }}>
                 you will be asked 36 questions.
                 <br />
                 answer with absolute honesty.
@@ -110,13 +115,14 @@ export default function OnboardingClient() {
                 >
                   let&apos;s do it.
                 </Button>
-                <p className="text-sm text-stone-500">Takes about 4–6 minutes.</p>
+                <p className="text-sm" style={{ color: '#5a5a5a' }}>Takes about 4–6 minutes.</p>
               </div>
             </div>
           </div>
         </div>
-        <p className="text-center text-xs text-stone-400 mt-6">© 2025 grid64 — built for the best</p>
+        <p className="text-center text-xs mt-6" style={{ color: '#5a5a5a' }}>© 2025 grid64 — built for the best</p>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { toPng } from "html-to-image";
 import { Download, ArrowLeft } from "lucide-react";
+import MobileNotice from "@/components/mobile-notice";
 
 interface Cell {
   text: string;
@@ -202,8 +203,10 @@ const GridPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-stone-50 via-white to-stone-100 safe-area py-8">
-      <div className="max-w-[1400px] mx-auto">
+    <>
+      <MobileNotice />
+      <div className="min-h-screen bg-linear-to-br from-stone-50 via-white to-stone-100 safe-area py-8">
+        <div className="max-w-[1400px] mx-auto">
         <div className="flex items-center justify-between mb-8 animate-fadeIn">
           <div>
             <h1 className="text-5xl md:text-6xl font-light text-stone-900 tracking-tight mb-2">
@@ -319,7 +322,8 @@ const GridPage = () => {
           opacity: 0;
         }
       `}</style>
-    </div>
+      </div>
+    </>
   );
 };
 

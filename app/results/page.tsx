@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { toPng } from "html-to-image";
 import { Download } from "lucide-react";
+import MobileNotice from "@/components/mobile-notice";
 
 interface Cell {
   text: string;
@@ -214,8 +215,10 @@ const ResultsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 py-12 px-4">
-      <div className="max-w-[1400px] mx-auto">
+    <>
+      <MobileNotice />
+      <div className="min-h-screen bg-stone-50 py-12 px-4">
+        <div className="max-w-[1400px] mx-auto">
         <div className="flex items-center justify-between mb-12 animate-fadeIn">
           <div>
             <h1 className="text-5xl md:text-6xl font-light text-stone-900 tracking-tight mb-2">
@@ -297,6 +300,7 @@ const ResultsPage = () => {
             </button>
           </Link>
         </div>
+        </div>
       </div>
 
       <style jsx global>{`
@@ -330,7 +334,7 @@ const ResultsPage = () => {
           opacity: 0;
         }
       `}</style>
-    </div>
+    </>
   );
 };
 

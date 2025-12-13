@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { GridBackground } from "@/components/grid-bg";
+import MobileNotice from "./mobile-notice";
 
 export default function HomeClient() {
   const [value, setValue] = useState("");
@@ -43,46 +44,55 @@ export default function HomeClient() {
   };
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-linear-to-br from-stone-50 via-white to-stone-100 safe-area">
-      <GridBackground />
+    <>
+      <MobileNotice />
+      <section className="relative min-h-screen overflow-hidden safe-area flex items-center justify-center px-6 py-16">
+        <GridBackground />
 
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-16">
-        <div className="surface-strong max-w-xl w-full px-10 py-12 text-center space-y-8 shadow-xl">
-          <div className="space-y-2">
-            <h1 className="text-xl text-stone-500">grid64</h1>
-            <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-stone-900">
-              Set Your Goal
-            </h1>
+        {/* White container */}
+        <div className="relative z-10 w-full max-w-2xl">
+          <div className="relative overflow-hidden rounded-2xl bg-white/50 backdrop-blur-md border border-stone-200 shadow-[0_18px_60px_-30px_rgba(0,0,0,0.25)] px-8 py-10 sm:px-12 sm:py-12 text-center">
+            <div className="relative z-10 space-y-7">
+              <div className="space-y-2">
+                {/* <h1 className="text-xs uppercase tracking-[0.35em]" style={{ color: '#5a5a5a' }}>Set your goal</h1> */}
+                <h1 className="text-5xl md:text-6xl font-semibold tracking-tight" style={{ color: '#000000' }}>
+                  Set Your Goal
+                </h1>
+              </div>
+
+              {/* Divider */}
+              <div className="mx-auto w-20 h-px" style={{ backgroundColor: '#d4c4bc' }} />
+
+              <div className="space-y-4">
+                <Input
+                  type="text"
+                  placeholder="i want to be rich"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  className="soft-input text-sm"
+                />
+                <p className="text-sm" style={{ color: '#5a5a5a' }}>
+                  Be specific. We&apos;ll carve out the path.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <Button
+                  onClick={handleClick}
+                  disabled={value.length < MIN_CHARS}
+                  className="cursor-pointer btn-primary w-full sm:w-auto disabled:opacity-60 disabled:cursor-not-allowed px-6 py-3"
+                >
+                  Start building
+                </Button>
+              </div>
+
+              <p className="text-xs" style={{ color: '#5a5a5a' }}>
+                © 2025 grid64 — built for the best
+              </p>
+            </div>
           </div>
-
-          <div className="space-y-4">
-            <Input
-              type="text"
-              placeholder="i want to be rich"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              className="soft-input text-sm"
-            />
-            <p className="text-sm text-stone-500">
-              Be specific. We&apos;ll carve out the path.
-            </p>
-          </div>
-
-          <div className="flex justify-center">
-            <Button
-              onClick={handleClick}
-              disabled={value.length < MIN_CHARS}
-              className="cursor-pointer btn-primary w-full md:w-auto disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              Start building
-            </Button>
-          </div>
-
-          <p className="text-xs text-stone-400">
-            © 2025 grid64 — built for the best
-          </p>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

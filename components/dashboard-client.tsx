@@ -5,6 +5,7 @@ import { UserButton } from "@clerk/nextjs"
 import { Check, Flame, Grid3x3, Plus, Target, TrendingUp, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import MobileNotice from "./mobile-notice"
 
 interface Task {
   id: string
@@ -224,12 +225,14 @@ export default function DashboardClient() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-stone-50 via-white to-stone-100 safe-area">
+    <>
+      <MobileNotice />
+      <div className="min-h-screen safe-area" style={{ backgroundColor: '#F6F7EB' }}>
       {/* Header */}
-      <header className="surface-strong flex items-center justify-between px-8 py-8 border-b border-stone-200 shadow-md">
+      <header className="flex items-center justify-between px-8 py-8 shadow-md border-b rounded-2xl" style={{ backgroundColor: '#DBCDC6', borderBottomColor: '#DBCDC6' }}>
         <div className="flex-1">
-          <h1 className="text-5xl font-light tracking-tight text-stone-900">今日</h1>
-          <p className="text-stone-500 text-sm tracking-wide mt-1 uppercase">{today}</p>
+          <h1 className="text-5xl font-light tracking-tight" style={{ color: '#000000' }}>今日</h1>
+          <p className="text-sm tracking-wide mt-1 uppercase" style={{ color: '#000000' }}>{today}</p>
         </div>
         
         <div className="flex items-center gap-4">
@@ -239,7 +242,8 @@ export default function DashboardClient() {
                 value={activePlanId}
                 onChange={(e) => handleSwitchPlan(e.target.value)}
                 disabled={isSwitchingPlan}
-                className="px-4 py-2 bg-white border border-stone-200 hover:border-stone-400 text-stone-900 text-sm tracking-wide cursor-pointer transition-transform duration-300 hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed appearance-none pr-8"
+                className="px-4 py-2 text-sm tracking-wide cursor-pointer transition-transform duration-300 hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed appearance-none pr-8 rounded-xl border"
+                style={{ backgroundColor: '#000000', color: '#EAD7D1', borderColor: '#000000' }}
               >
                 {plans.map((plan) => (
                   <option key={plan.id} value={plan.id}>
@@ -256,15 +260,16 @@ export default function DashboardClient() {
           )}
           
           <Link href="/grid">
-            <button className="rounded-xl group flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-900 text-stone-900 hover:text-white border border-stone-200 hover:border-stone-900 transition-all duration-300">
+            <button className="rounded-xl group flex items-center gap-2 px-4 py-2 border transition-all duration-300" style={{ backgroundColor: '#DBCDC6', color: '#000000', borderColor: '#DBCDC6' }}>
               <Grid3x3 className="w-4 h-4" />
               <span className="text-sm tracking-wide">View Grid</span>
             </button>
           </Link>
           
-          <button
+            <button
             onClick={handleNewGoal}
-            className="rounded-xl group flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white border border-stone-900 transition-transform duration-300 hover:-translate-y-0.5 active:scale-95"
+            className="rounded-xl group flex items-center gap-2 px-4 py-2 border transition-transform duration-300 hover:-translate-y-0.5 active:scale-95"
+            style={{ backgroundColor: '#000000', color: '#F6F7EB', borderColor: '#000000' }}
           >
             <Plus className="w-4 h-4" />
             <span className="text-sm tracking-wide">New Goal</span>
@@ -281,34 +286,29 @@ export default function DashboardClient() {
             {/* Goal Section */}
             {goal && (
               <section className="animate-fadeIn">
-                <div className="bg-stone-900 text-white p-10 space-y-3 border border-stone-900 rounded-2xl shadow-xl">
-                  <div className="flex items-center gap-2">
-                    <Target className="w-5 h-5 text-stone-400" />
-                    <div className="text-xs tracking-widest uppercase text-stone-400">Your Goal</div>
+                <div className="p-10 space-y-3 rounded-2xl shadow-xl border" style={{ backgroundColor: '#DBCDC6', borderColor: '#DBCDC6' }}>
+                    <div className="flex items-center gap-2">
+                      <Target className="w-5 h-5" style={{ color: '#000000' }} />
+                      <div className="text-xs tracking-widest uppercase" style={{ color: '#000000' }}>Your Goal</div>
+                    </div>
+                    <p className="text-2xl font-light leading-relaxed tracking-tight" style={{ color: '#000000' }}>{goal}</p>
                   </div>
-                  <p className="text-2xl font-light leading-relaxed tracking-tight">{goal}</p>
-                  <p className="text-sm text-stone-400 italic pt-2">
-                    "Small daily actions compound into extraordinary results"
-                  </p>
-                </div>
               </section>
             )}
 
             {/* Stats Grid */}
             <section className="grid grid-cols-3 gap-4 animate-fadeIn" style={{ animationDelay: '50ms' }}>
               {/* Streak Card */}
-              <div className="bg-white border border-stone-200 p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center space-y-2 hover:border-stone-400 hover:shadow-md transition-all duration-300">
-                <Flame className={`w-7 h-7 transition-colors duration-300 ${
-                  streak > 0 ? 'text-orange-500' : 'text-stone-300'
-                }`} />
+              <div className="p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center space-y-2 transition-all duration-300 border" style={{ backgroundColor: '#DBCDC6', borderColor: '#d4c4bc' }}>
+                <Flame className="w-7 h-7 transition-colors duration-300" style={{ color: streak > 0 ? '#000000' : '#d4c4bc' }} />
                 <div className="text-center">
-                  <div className="text-3xl font-light text-stone-900 tracking-tight">{streak}</div>
-                  <div className="text-[10px] text-stone-500 tracking-widest uppercase mt-1">Streak</div>
+                  <div className="text-3xl font-light tracking-tight" style={{ color: '#000000' }}>{streak}</div>
+                  <div className="text-[10px] tracking-widest uppercase mt-1" style={{ color: '#5a5a5a' }}>Streak</div>
                 </div>
               </div>
 
               {/* Today's Progress Card */}
-              <div className="bg-white border border-stone-200 p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center space-y-2 hover:border-stone-400 hover:shadow-md transition-all duration-300">
+              <div className="p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center space-y-2 transition-all duration-300 border" style={{ backgroundColor: '#DBCDC6', borderColor: '#d4c4bc' }}>
                 <div className="relative w-14 h-14">
                   <svg className="w-14 h-14 transform -rotate-90">
                     <circle
@@ -318,7 +318,7 @@ export default function DashboardClient() {
                       stroke="currentColor"
                       strokeWidth="4"
                       fill="none"
-                      className="text-stone-200"
+                      style={{ color: '#d4c4bc' }}
                     />
                     <circle
                       cx="28"
@@ -329,25 +329,26 @@ export default function DashboardClient() {
                       fill="none"
                       strokeDasharray={`${2 * Math.PI * 24}`}
                       strokeDashoffset={`${2 * Math.PI * 24 * (1 - completionPercentage / 100)}`}
-                      className="text-stone-900 transition-all duration-500"
+                      style={{ color: '#000000' }}
+                      className="transition-all duration-500"
                       strokeLinecap="round"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-lg font-light text-stone-900">{completionPercentage}%</span>
+                    <span className="text-lg font-light" style={{ color: '#000000' }}>{completionPercentage}%</span>
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-[10px] text-stone-500 tracking-widest uppercase mt-1">Today</div>
+                  <div className="text-[10px] tracking-widest uppercase mt-1" style={{ color: '#5a5a5a' }}>Today</div>
                 </div>
               </div>
 
               {/* Completed Today Card */}
-              <div className="bg-white border border-stone-200 p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center space-y-2 hover:border-stone-400 hover:shadow-md transition-all duration-300">
-                <TrendingUp className="w-7 h-7 text-stone-600" />
+              <div className="p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center space-y-2 transition-all duration-300 border" style={{ backgroundColor: '#DBCDC6', borderColor: '#d4c4bc' }}>
+                <TrendingUp className="w-7 h-7" style={{ color: '#000000' }} />
                 <div className="text-center">
-                  <div className="text-3xl font-light text-stone-900 tracking-tight">{completedCount}</div>
-                  <div className="text-[10px] text-stone-500 tracking-widest uppercase mt-1">Completed</div>
+                  <div className="text-3xl font-light tracking-tight" style={{ color: '#000000' }}>{completedCount}</div>
+                  <div className="text-[10px] tracking-widest uppercase mt-1" style={{ color: '#5a5a5a' }}>Completed</div>
                 </div>
               </div>
             </section>
@@ -356,7 +357,7 @@ export default function DashboardClient() {
           {/* Right Column - Tasks */}
           <div className="space-y-6 animate-slideUp" style={{ animationDelay: '100ms' }}>
             <div className="space-y-2">
-              <h2 className="text-2xl font-light tracking-tight text-stone-900">Daily Practice</h2>
+              <h2 className="text-2xl font-light tracking-tight" style={{ color: '#000000' }}>Daily Practice</h2>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-stone-500 tracking-wide">
                   {completedCount} of {tasks.length} complete
@@ -380,33 +381,35 @@ export default function DashboardClient() {
                   <button
                     key={task.id}
                     onClick={() => toggleTask(task.id)}
-                    className="w-full flex items-start gap-4 px-6 py-5 bg-white border border-stone-200 rounded-xl shadow-sm hover:shadow-md hover:border-stone-400 transition-all duration-300 group"
+                    className="w-full flex items-start gap-4 px-6 py-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group border"
                     style={{ 
                       animationDelay: `${index * 50}ms`,
                       opacity: 0,
-                      animation: 'fadeIn 0.5s ease-out forwards'
+                      animation: 'fadeIn 0.5s ease-out forwards',
+                      backgroundColor: '#DBCDC6',
+                      borderColor: '#d4c4bc'
                     }}
                   >
                     <div
-                      className={`w-5 h-5 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all duration-300 shrink-0 ${
-                        task.completed 
-                          ? "bg-stone-900 border-stone-900" 
-                          : "border-stone-300 group-hover:border-stone-900"
-                      }`}
+                      className="w-5 h-5 mt-0.5 rounded-full border-2 flex items-center justify-center transition-all duration-300 shrink-0"
+                      style={{
+                        backgroundColor: task.completed ? '#000000' : 'transparent',
+                        borderColor: task.completed ? '#000000' : '#d4c4bc'
+                      }}
                     >
                       {task.completed && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                     </div>
                     <div className="flex-1 text-left space-y-1">
                       <span
-                        className={`block text-sm transition-all duration-300 ${
-                          task.completed 
-                            ? "text-stone-400 line-through" 
-                            : "text-stone-900"
-                        }`}
+                        className="block text-base transition-all duration-300"
+                        style={{
+                          color: task.completed ? '#d4c4bc' : '#000000',
+                          textDecoration: task.completed ? 'line-through' : 'none'
+                        }}
                       >
                         {task.content}
                       </span>
-                      <span className="block text-xs text-stone-500 tracking-widest uppercase">
+                      <span className="block text-xs tracking-widest uppercase" style={{ color: '#5a5a5a' }}>
                         {task.pillarTitle}
                       </span>
                     </div>
@@ -515,6 +518,7 @@ export default function DashboardClient() {
           opacity: 0;
         }
       `}</style>
-    </div>
+      </div>
+    </>
   )
 }

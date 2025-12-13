@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { GridBackground } from "@/components/grid-bg";
+import MobileNotice from "@/components/mobile-notice";
 
 export default function Pillars() {
   const router = useRouter();
@@ -92,10 +94,10 @@ export default function Pillars() {
 
   if (isLoading || isGenerating) {
     return (
-      <div className="min-h-screen bg-stone-50 safe-area flex items-center justify-center">
+      <div className="min-h-screen safe-area flex items-center justify-center" style={{ backgroundColor: '#F6F7EB' }}>
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-stone-900 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-stone-600 text-lg">
+          <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto" style={{ borderColor: '#000000', borderTopColor: 'transparent' }} />
+          <p className="text-lg" style={{ color: '#000000' }}>
             {isGenerating ? "Analyzing your responses..." : "Loading..."}
           </p>
         </div>
@@ -104,55 +106,81 @@ export default function Pillars() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 safe-area flex flex-col items-center justify-center px-6 py-12">
-      <div className="max-w-4xl w-full">
-        {/* Header */}
-        <div className="text-center space-y-4 mb-16">
-          <h1 className="text-5xl md:text-6xl font-light tracking-tight text-stone-900">
-            your 8 pillars
-          </h1>
-          <p className="text-base text-stone-600 font-light tracking-wide leading-relaxed max-w-2xl mx-auto">
-            Working towards: <span className="font-medium">{goal}</span>
-          </p>
-          <p className="text-sm text-stone-500 font-light">
-            Based on your responses, these are your 8 focus areas.
-          </p>
-        </div>
+    <>
+      <MobileNotice />
+      <section className="relative min-h-screen overflow-hidden safe-area flex items-center justify-center px-6 py-16" style={{ backgroundColor: '#F6F7EB' }}>
+        <GridBackground />
 
-        {/* Pillars Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-          {pillars.map((pillar, index) => (
-            <div
-              key={index}
-              className={`group relative aspect-square bg-white border-2 rounded-lg p-6 flex flex-col items-center justify-center transition-all duration-200 shadow-sm`}
-            >
-              <p className="text-lg md:text-xl font-light text-center text-stone-900">
-                {pillar}
+        {/* Main container */}
+        <div className="relative z-10 w-full max-w-3xl">
+          <div className="relative overflow-hidden rounded-2xl bg-white/50 backdrop-blur-md border border-stone-200 shadow-[0_18px_60px_-30px_rgba(0,0,0,0.25)] px-8 py-10 sm:px-12 sm:py-12">
+            <div className="relative z-10 space-y-8">
+              {/* Header */}
+              <div className="text-center space-y-4">
+                <p className="text-xs uppercase tracking-[0.35em]" style={{ color: '#5a5a5a' }}>your foundation</p>
+                <h1 className="text-5xl md:text-6xl font-semibold tracking-tight" style={{ color: '#000000' }}>
+                  Your 8 Pillars
+                </h1>
+                <p className="text-lg" style={{ color: '#000000' }}>
+                  Working towards: <span className="font-medium">{goal}</span>
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className="mx-auto w-20 h-px" style={{ backgroundColor: '#d4c4bc' }} />
+
+              {/* Pillars List - Vertical */}
+              <div className="space-y-3">
+                {pillars.map((pillar, index) => (
+                  <div
+                    key={index}
+                    className="group relative p-4 rounded-xl border transition-all duration-300 hover:shadow-md"
+                    style={{
+                      backgroundColor: '#DBCDC6',
+                      borderColor: '#d4c4bc'
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-semibold" style={{ backgroundColor: '#000000', color: '#F6F7EB' }}>
+                        {index + 1}
+                      </div>
+                      <p className="text-lg font-medium flex-1" style={{ color: '#000000' }}>
+                        {pillar}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Description */}
+              <p className="text-center text-sm" style={{ color: '#5a5a5a' }}>
+                Based on your responses, these are your 8 focus areas to build your life around.
               </p>
-            </div>
-          ))}
-        </div>
 
-        {/* Footer */}
-        <div className="flex flex-col gap-4 pt-8 border-t border-stone-200">
-          <div className="flex gap-4 mx-auto">
-            <button
-              onClick={() => router.back()}
-              disabled={isSaving}
-              className="px-8 py-3 rounded-sm border border-stone-300 text-stone-900 hover:border-stone-400 hover:bg-stone-100 transition-all duration-200 text-base font-light disabled:opacity-50"
-            >
-              back
-            </button>
-            <button
-              onClick={handleContinue}
-              disabled={isSaving}
-              className="px-8 py-3 rounded-sm bg-stone-900 text-white hover:bg-stone-800 transition-all duration-200 text-base font-light disabled:opacity-50"
-            >
-              {isSaving ? "saving..." : "continue"}
-            </button>
+              {/* Divider */}
+              <div className="mx-auto w-20 h-px" style={{ backgroundColor: '#d4c4bc' }} />
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => router.back()}
+                  disabled={isSaving}
+                  className="btn-ghost px-6 py-3 text-sm disabled:opacity-50"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleContinue}
+                  disabled={isSaving}
+                  className="btn-primary px-6 py-3 text-sm disabled:opacity-50"
+                >
+                  {isSaving ? "Saving..." : "Continue"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
 }
